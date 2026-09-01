@@ -35,6 +35,14 @@ O código é organizado por módulo. Cada módulo pode conter rotas, controller,
 
 Optamos por camadas simples, sem interfaces ou injeção de dependência enquanto elas não trouxerem benefício concreto.
 
+## Autenticação administrativa
+
+Usamos senha protegida com bcrypt e JWT armazenado em cookie `httpOnly`. O token expira após duas horas, e o middleware consulta o usuário no banco antes de liberar a rota. O token não é exposto ao JavaScript do frontend nem retornado no corpo da resposta.
+
+Ganhamos uma autenticação simples para uma API separada do frontend, sem manter uma tabela de sessões. Em contrapartida, não temos revogação individual de tokens: o logout remove o cookie do navegador, mas um token copiado permanece válido até expirar enquanto o usuário existir. Para o escopo de um único administrador e sessões curtas, aceitamos essa limitação.
+
+O seed cria um administrador com credenciais configuradas por variáveis de ambiente.
+
 
 ## Ambiguidades decididas até agora
 

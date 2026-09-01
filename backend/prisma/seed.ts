@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
+import { env } from "../src/config/environment.js";
 
 const prisma = new PrismaClient();
 
@@ -37,6 +39,21 @@ const workshops = [
 ];
 
 async function run() {
+  const passwordHash = await hash(env.ADMIN_PASSWORD, 12);
+
+  await prisma.user.upsert({
+    where: { email: env.ADMIN_EMAIL.toLowerCase() },
+    update: {
+      name: env.ADMIN_NAME,
+      passwordHash,
+    },
+    create: {
+      name: env.ADMIN_NAME,
+      email: env.ADMIN_EMAIL.toLowerCase(),
+      passwordHash,
+    },
+  });
+
   for (const workshop of workshops) {
     const existingWorkshop = await prisma.workshop.findFirst({
       where: { title: workshop.title },
@@ -55,5 +72,4 @@ run()
     await prisma.$disconnect();
     process.exit(1);
   });
-
 
