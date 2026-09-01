@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnrollmentStatus {
+  PENDENTE
+  CONFIRMADA
+  CANCELADA
+
+  @@map("StatusInscricao")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String   @map("nome")
+  email         String   @unique
+  passwordHash  String   @map("senha_hash")
+  createdAt     DateTime @default(now()) @map("criado_em")
+  updatedAt     DateTime @updatedAt @map("atualizado_em")
+
+  @@map("usuarios")
+}
+
+model Workshop {
+  id           String       @id @default(uuid())
+  title        String       @map("titulo")
+  description  String       @map("descricao")
+  startsAt     DateTime     @map("data_inicio")
+  durationMin  Int          @map("duracao_min")
+  capacity     Int          @map("vagas")
+  location     String       @map("local")
+  active       Boolean      @default(true) @map("ativa")
+  createdAt    DateTime     @default(now()) @map("criado_em")
+  updatedAt    DateTime     @updatedAt @map("atualizado_em")
+  enrollments  Enrollment[]
+
+  @@index([active, startsAt])
+  @@map("oficinas")
+}
+
+model Enrollment {
+  id           String           @id @default(uuid())
+  name         String           @map("nome")
+  email        String
+  status       EnrollmentStatus @default(PENDENTE)
+  workshopId   String           @map("oficina_id")
+  workshop     Workshop         @relation(fields: [workshopId], references: [id])
+  createdAt    DateTime         @default(now()) @map("criado_em")
+  updatedAt    DateTime         @updatedAt @map("atualizado_em")
+
+  @@unique([email, workshopId])
+  @@index([status, createdAt])
+  @@map("inscricoes")
+}
+
+

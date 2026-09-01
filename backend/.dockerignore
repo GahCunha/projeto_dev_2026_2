@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.env
+.firecrawl
+coverage
+npm-debug.log
+
+
