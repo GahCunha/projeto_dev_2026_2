@@ -72,6 +72,7 @@ npm run dev
 | `npm run dev` | Inicia a API com recarregamento automático |
 | `npm run build` | Compila o TypeScript |
 | `npm run check` | Verifica os tipos sem gerar arquivos |
+| `npm test` | Executa os testes automatizados |
 | `npm run db:generate` | Gera o cliente Prisma |
 | `npm run db:deploy` | Aplica as migrations versionadas |
 | `npm run db:seed` | Cadastra os dados iniciais |
@@ -83,3 +84,26 @@ npm run dev
 | `GET` | `/api/saude` | Público | Verifica se a API está ativa |
 | `GET` | `/api/oficinas` | Público | Lista oficinas ativas por data |
 | `GET` | `/api/oficinas/:id` | Público | Consulta uma oficina ativa |
+| `POST` | `/api/inscricoes` | Público | Cria uma inscrição pendente |
+
+### Criar uma inscrição
+
+```json
+{
+  "name": "Maria Artesã",
+  "email": "maria@example.com",
+  "workshopId": "UUID_DA_OFICINA"
+}
+```
+
+A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina.
+
+## Testes
+
+Com os containers ativos, execute na raiz do repositório:
+
+```bash
+docker compose exec api npm test
+```
+
+Os testes criam dados próprios e os removem ao terminar, sem apagar o seed de demonstração.

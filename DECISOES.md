@@ -46,6 +46,10 @@ A oficina deixa de aparecer para visitantes, mas permanece no banco e continua r
 
 O mesmo e-mail não poderá se inscrever duas vezes na mesma oficina. A restrição também existe no banco para proteger a regra em situações concorrentes.
 
+### Ocupação das vagas
+
+Inscrições `PENDENTE` e `CONFIRMADA` ocupam vaga. Uma vaga volta a ficar disponível somente quando a inscrição é `CANCELADA`. Preferimos não receber mais solicitações do que a capacidade anunciada comporta.
+
 ### Datas dos dados iniciais
 
 O seed cria oficinas com datas relativas ao momento da execução. Assim, os dados de demonstração continuam futuros quando o projeto é avaliado.
