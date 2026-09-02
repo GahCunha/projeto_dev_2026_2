@@ -101,6 +101,7 @@ npm run dev
 | `POST` | `/api/admin/auth/login` | Público | Autentica o administrador |
 | `POST` | `/api/admin/auth/logout` | Administrador | Encerra a sessão |
 | `GET` | `/api/admin/auth/me` | Administrador | Retorna o usuário autenticado |
+| `GET` | `/api/admin/inscricoes` | Administrador | Lista inscrições com busca, filtro e paginação |
 
 ### Criar uma inscrição
 
@@ -140,6 +141,14 @@ Quando as credenciais são válidas, a API grava um JWT em cookie `httpOnly`. O 
 Em uma implantação HTTPS, configure obrigatoriamente `COOKIE_SECURE=true` e substitua `JWT_SECRET`, `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
 
 Também é possível testar o fluxo pelo Swagger UI: execute primeiro `/api/admin/auth/login`; como a documentação está na mesma origem da API, o navegador mantém o cookie para as chamadas protegidas seguintes.
+
+### Listagem administrativa
+
+```http
+GET /api/admin/inscricoes?status=PENDENTE&search=maria&page=1&pageSize=10
+```
+
+Os parâmetros são opcionais. A API limita cada página a 50 itens e ordena as inscrições pela data da oficina. Cada item inclui um resumo da oficina relacionada.
 
 ## Variáveis de ambiente
 

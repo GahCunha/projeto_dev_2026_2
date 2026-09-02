@@ -14,6 +14,7 @@ export const openApiDocument = {
     { name: "Oficinas", description: "Consulta pública de oficinas" },
     { name: "Inscrições", description: "Inscrições públicas em oficinas" },
     { name: "Autenticação", description: "Sessão do administrador" },
+    { name: "Administração", description: "Gestão protegida da plataforma" },
   ],
   components: {
     securitySchemes: {
@@ -70,6 +71,37 @@ export const openApiDocument = {
           workshopId: { type: "string", format: "uuid" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      EnrollmentWithWorkshop: {
+        allOf: [
+          { $ref: "#/components/schemas/Enrollment" },
+          {
+            type: "object",
+            required: ["workshop"],
+            properties: {
+              workshop: {
+                type: "object",
+                required: ["id", "title", "startsAt", "active"],
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  title: { type: "string", example: "Crochê: primeiros pontos" },
+                  startsAt: { type: "string", format: "date-time" },
+                  active: { type: "boolean" },
+                },
+              },
+            },
+          },
+        ],
+      },
+      Pagination: {
+        type: "object",
+        required: ["page", "pageSize", "totalItems", "totalPages"],
+        properties: {
+          page: { type: "integer", minimum: 1, example: 1 },
+          pageSize: { type: "integer", minimum: 1, maximum: 50, example: 10 },
+          totalItems: { type: "integer", minimum: 0, example: 34 },
+          totalPages: { type: "integer", minimum: 0, example: 4 },
         },
       },
       User: {
@@ -313,6 +345,58 @@ export const openApiDocument = {
             },
           },
           "401": { $ref: "#/components/responses/Unauthenticated" },
+        },
+      },
+    },
+    "/api/admin/inscricoes": {
+      get: {
+        tags: ["Administração"],
+        summary: "Lista inscrições para gestão",
+        description:
+          "Retorna inscrições paginadas e ordenadas pela data da oficina. Permite busca case-insensitive por nome ou e-mail e filtro por status.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: "status",
+            in: "query",
+            schema: { type: "string", enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"] },
+          },
+          {
+            name: "search",
+            in: "query",
+            schema: { type: "string", maxLength: 120 },
+          },
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            name: "pageSize",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 50, default: 10 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Página de inscrições",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/EnrollmentWithWorkshop" },
+                    },
+                    pagination: { $ref: "#/components/schemas/Pagination" },
+                  },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
     },

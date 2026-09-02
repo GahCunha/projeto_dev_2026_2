@@ -2,9 +2,23 @@ import { Prisma } from "@prisma/client";
 import { AppError } from "../../shared/errors/app-error.js";
 import { workshopRepository } from "../workshops/workshop.repository.js";
 import { enrollmentRepository } from "./enrollment.repository.js";
-import type { CreateEnrollmentInput } from "./enrollment.schemas.js";
+import type { CreateEnrollmentInput, ListEnrollmentsQuery } from "./enrollment.schemas.js";
 
 export const enrollmentService = {
+  async list(query: ListEnrollmentsQuery) {
+    const { items, totalItems } = await enrollmentRepository.list(query);
+
+    return {
+      items,
+      pagination: {
+        page: query.page,
+        pageSize: query.pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / query.pageSize),
+      },
+    };
+  },
+
   async create(data: CreateEnrollmentInput) {
     const workshop = await workshopRepository.findById(data.workshopId);
 
