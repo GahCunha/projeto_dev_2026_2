@@ -1,7 +1,9 @@
 import type { RequestHandler } from "express";
 import {
   createWorkshopSchema,
+  listWorkshopsQuerySchema,
   updateWorkshopSchema,
+  updateWorkshopStatusSchema,
   workshopParamsSchema,
 } from "./workshop.schemas.js";
 import { workshopService } from "./workshop.service.js";
@@ -17,6 +19,12 @@ export const getActiveWorkshop: RequestHandler = async (req, res) => {
   res.json({ data: workshop });
 };
 
+export const listWorkshops: RequestHandler = async (req, res) => {
+  const query = listWorkshopsQuerySchema.parse(req.query);
+  const result = await workshopService.list(query);
+  res.json({ data: result.items, pagination: result.pagination });
+};
+
 export const createWorkshop: RequestHandler = async (req, res) => {
   const data = createWorkshopSchema.parse(req.body);
   const workshop = await workshopService.create(data);
@@ -30,4 +38,9 @@ export const updateWorkshop: RequestHandler = async (req, res) => {
   res.json({ data: workshop });
 };
 
-
+export const updateWorkshopStatus: RequestHandler = async (req, res) => {
+  const { id } = workshopParamsSchema.parse(req.params);
+  const { active } = updateWorkshopStatusSchema.parse(req.body);
+  const workshop = await workshopService.updateStatus(id, active);
+  res.json({ data: workshop });
+};

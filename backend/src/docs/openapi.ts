@@ -128,6 +128,45 @@ export const openApiDocument = {
           workshopId: { type: "string", format: "uuid" },
         },
       },
+      CreateWorkshopInput: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "description", "startsAt", "durationMin", "capacity", "location"],
+        properties: {
+          title: { type: "string", minLength: 3, maxLength: 120, example: "Cerâmica fria" },
+          description: {
+            type: "string",
+            minLength: 10,
+            maxLength: 1000,
+            example: "Aprenda a modelar e finalizar pequenas peças decorativas.",
+          },
+          startsAt: { type: "string", format: "date-time" },
+          durationMin: { type: "integer", minimum: 30, maximum: 1440, example: 180 },
+          capacity: { type: "integer", minimum: 1, maximum: 500, example: 12 },
+          location: { type: "string", minLength: 3, maxLength: 160, example: "Sala 2" },
+        },
+      },
+      UpdateWorkshopInput: {
+        type: "object",
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          title: { type: "string", minLength: 3, maxLength: 120 },
+          description: { type: "string", minLength: 10, maxLength: 1000 },
+          startsAt: { type: "string", format: "date-time" },
+          durationMin: { type: "integer", minimum: 30, maximum: 1440 },
+          capacity: { type: "integer", minimum: 1, maximum: 500 },
+          location: { type: "string", minLength: 3, maxLength: 160 },
+        },
+      },
+      UpdateWorkshopStatusInput: {
+        type: "object",
+        additionalProperties: false,
+        required: ["active"],
+        properties: {
+          active: { type: "boolean", example: false },
+        },
+      },
       UpdateEnrollmentStatusInput: {
         type: "object",
         additionalProperties: false,
@@ -408,6 +447,176 @@ export const openApiDocument = {
             },
           },
           "401": { $ref: "#/components/responses/Unauthenticated" },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/oficinas": {
+      get: {
+        tags: ["Administração"],
+        summary: "Lista oficinas para gestão",
+        description:
+          "Retorna oficinas ativas e inativas, com busca por título ou local, filtro de atividade e paginação.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "active", in: "query", schema: { type: "boolean" } },
+          { name: "search", in: "query", schema: { type: "string", maxLength: 120 } },
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            name: "pageSize",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 50, default: 10 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Página de oficinas",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Workshop" },
+                    },
+                    pagination: { $ref: "#/components/schemas/Pagination" },
+                  },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+      post: {
+        tags: ["Administração"],
+        summary: "Cria uma oficina",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/CreateWorkshopInput" } },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Oficina criada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/oficinas/{id}": {
+      patch: {
+        tags: ["Administração"],
+        summary: "Edita uma oficina",
+        description:
+          "Atualiza um ou mais dados. A capacidade não pode ficar abaixo das inscrições pendentes e confirmadas.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/UpdateWorkshopInput" } },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Oficina atualizada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": {
+            description: "Oficina não encontrada",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "409": {
+            description: "Capacidade menor que a ocupação atual",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/oficinas/{id}/status": {
+      patch: {
+        tags: ["Administração"],
+        summary: "Ativa ou desativa uma oficina",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateWorkshopStatusInput" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Status atualizado",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": {
+            description: "Oficina não encontrada",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "409": {
+            description: "A oficina já possui o status solicitado",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },

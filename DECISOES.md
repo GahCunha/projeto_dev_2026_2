@@ -62,6 +62,14 @@ Inscrições `PENDENTE` e `CONFIRMADA` ocupam vaga. Uma vaga volta a ficar dispo
 
 Uma inscrição `PENDENTE` pode passar para `CONFIRMADA` ou `CANCELADA`, e uma inscrição `CONFIRMADA` pode passar para `CANCELADA`. Uma inscrição cancelada não pode ser reaberta e nenhuma inscrição volta para `PENDENTE`. Como a pendência já reserva uma vaga, a confirmação não altera a ocupação. A atualização também compara o status atual no banco para detectar alterações concorrentes.
 
+### Listagem administrativa de oficinas
+
+A área administrativa lista oficinas ativas e inativas, diferentemente da área pública. A consulta aceita busca por título ou local, filtro de atividade e paginação, preparando o contrato necessário para o painel sem expor essas informações na rota pública.
+
+### Edição e desativação de oficinas
+
+Editar dados e alterar o estado ativo são operações separadas. Isso evita desativação acidental em uma edição comum. A capacidade nunca pode ser reduzida abaixo das inscrições pendentes e confirmadas. Desativar uma oficina não remove seus dados ou inscrições, apenas a retira da consulta pública.
+
 ### Datas dos dados iniciais
 
 O seed cria oficinas com datas relativas ao momento da execução. Assim, os dados de demonstração continuam futuros quando o projeto é avaliado.

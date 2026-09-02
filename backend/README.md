@@ -103,6 +103,10 @@ npm run dev
 | `GET` | `/api/admin/auth/me` | Administrador | Retorna o usuário autenticado |
 | `GET` | `/api/admin/inscricoes` | Administrador | Lista inscrições com busca, filtro e paginação |
 | `PATCH` | `/api/admin/inscricoes/:id/status` | Administrador | Confirma ou cancela uma inscrição |
+| `GET` | `/api/admin/oficinas` | Administrador | Lista oficinas com busca, filtro e paginação |
+| `POST` | `/api/admin/oficinas` | Administrador | Cria uma oficina |
+| `PATCH` | `/api/admin/oficinas/:id` | Administrador | Edita os dados de uma oficina |
+| `PATCH` | `/api/admin/oficinas/:id/status` | Administrador | Ativa ou desativa uma oficina |
 
 ### Criar uma inscrição
 
@@ -113,6 +117,18 @@ npm run dev
   "workshopId": "UUID_DA_OFICINA"
 }
 ```
+
+Para editar, envie um ou mais desses campos para `PATCH /api/admin/oficinas/:id`. A capacidade não pode ser reduzida para um valor menor que a quantidade de inscrições pendentes e confirmadas.
+
+O status é alterado separadamente:
+
+```json
+{
+  "active": false
+}
+```
+
+Uma oficina desativada continua armazenada com suas inscrições, mas deixa de aparecer nas rotas públicas.
 
 A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina.
 
@@ -163,6 +179,25 @@ Content-Type: application/json
 ```
 
 Uma inscrição pendente pode ser confirmada ou cancelada; uma confirmada pode ser cancelada. Inscrições canceladas não podem ser reabertas e nenhuma inscrição pode voltar ao estado pendente. Como inscrições pendentes já ocupam vaga, confirmá-las não aumenta a ocupação da oficina.
+
+### Gestão de oficinas
+
+```http
+GET /api/admin/oficinas?active=true&search=ceramica&page=1&pageSize=10
+```
+
+Os filtros são opcionais. Para criar uma oficina, envie título, descrição, data futura, duração em minutos, capacidade e local:
+
+```json
+{
+  "title": "Cerâmica fria",
+  "description": "Aprenda a modelar e finalizar pequenas peças decorativas.",
+  "startsAt": "2026-10-20T14:00:00.000Z",
+  "durationMin": 180,
+  "capacity": 12,
+  "location": "Sala 2"
+}
+```
 
 ## Variáveis de ambiente
 
