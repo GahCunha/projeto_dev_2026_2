@@ -21,3 +21,15 @@ export const listEnrollmentsQuerySchema = z
   .strict();
 
 export type ListEnrollmentsQuery = z.infer<typeof listEnrollmentsQuerySchema>;
+
+export const enrollmentParamsSchema = z.object({
+  id: z.string().uuid("Identificador de inscrição inválido"),
+});
+
+export const updateEnrollmentStatusSchema = z
+  .object({
+    status: z.enum([EnrollmentStatus.CONFIRMADA, EnrollmentStatus.CANCELADA]),
+  })
+  .strict();
+
+export type UpdateEnrollmentStatusInput = z.infer<typeof updateEnrollmentStatusSchema>;

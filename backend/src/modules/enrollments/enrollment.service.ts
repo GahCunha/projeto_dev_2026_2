@@ -1,10 +1,56 @@
-import { Prisma } from "@prisma/client";
+import { EnrollmentStatus, Prisma } from "@prisma/client";
 import { AppError } from "../../shared/errors/app-error.js";
 import { workshopRepository } from "../workshops/workshop.repository.js";
 import { enrollmentRepository } from "./enrollment.repository.js";
-import type { CreateEnrollmentInput, ListEnrollmentsQuery } from "./enrollment.schemas.js";
+import type {
+  CreateEnrollmentInput,
+  ListEnrollmentsQuery,
+  UpdateEnrollmentStatusInput,
+} from "./enrollment.schemas.js";
+
+const allowedTransitions: Record<EnrollmentStatus, EnrollmentStatus[]> = {
+  PENDENTE: [EnrollmentStatus.CONFIRMADA, EnrollmentStatus.CANCELADA],
+  CONFIRMADA: [EnrollmentStatus.CANCELADA],
+  CANCELADA: [],
+};
 
 export const enrollmentService = {
+  async updateStatus(id: string, input: UpdateEnrollmentStatusInput) {
+    const enrollment = await enrollmentRepository.findById(id);
+
+    if (!enrollment) {
+      throw new AppError("Inscrição não encontrada.", 404, "ENROLLMENT_NOT_FOUND");
+    }
+
+    if (enrollment.status === input.status) {
+      throw new AppError("A inscrição já possui este status.", 409, "STATUS_ALREADY_SET");
+    }
+
+    if (!allowedTransitions[enrollment.status].includes(input.status)) {
+      throw new AppError(
+        `Não é possível alterar uma inscrição de ${enrollment.status} para ${input.status}.`,
+        409,
+        "INVALID_STATUS_TRANSITION",
+      );
+    }
+
+    const updatedEnrollment = await enrollmentRepository.updateStatus(
+      id,
+      enrollment.status,
+      input.status,
+    );
+
+    if (!updatedEnrollment) {
+      throw new AppError(
+        "A inscrição foi alterada por outra operação. Atualize os dados e tente novamente.",
+        409,
+        "ENROLLMENT_CONFLICT",
+      );
+    }
+
+    return updatedEnrollment;
+  },
+
   async list(query: ListEnrollmentsQuery) {
     const { items, totalItems } = await enrollmentRepository.list(query);
 

@@ -102,6 +102,7 @@ npm run dev
 | `POST` | `/api/admin/auth/logout` | Administrador | Encerra a sessão |
 | `GET` | `/api/admin/auth/me` | Administrador | Retorna o usuário autenticado |
 | `GET` | `/api/admin/inscricoes` | Administrador | Lista inscrições com busca, filtro e paginação |
+| `PATCH` | `/api/admin/inscricoes/:id/status` | Administrador | Confirma ou cancela uma inscrição |
 
 ### Criar uma inscrição
 
@@ -149,6 +150,19 @@ GET /api/admin/inscricoes?status=PENDENTE&search=maria&page=1&pageSize=10
 ```
 
 Os parâmetros são opcionais. A API limita cada página a 50 itens e ordena as inscrições pela data da oficina. Cada item inclui um resumo da oficina relacionada.
+
+### Alteração de status
+
+```http
+PATCH /api/admin/inscricoes/UUID_DA_INSCRICAO/status
+Content-Type: application/json
+
+{
+  "status": "CONFIRMADA"
+}
+```
+
+Uma inscrição pendente pode ser confirmada ou cancelada; uma confirmada pode ser cancelada. Inscrições canceladas não podem ser reabertas e nenhuma inscrição pode voltar ao estado pendente. Como inscrições pendentes já ocupam vaga, confirmá-las não aumenta a ocupação da oficina.
 
 ## Variáveis de ambiente
 

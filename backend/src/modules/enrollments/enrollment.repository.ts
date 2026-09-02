@@ -1,6 +1,10 @@
 import { EnrollmentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../config/database.js";
-import type { CreateEnrollmentInput, ListEnrollmentsQuery } from "./enrollment.schemas.js";
+import type {
+  CreateEnrollmentInput,
+  ListEnrollmentsQuery,
+  UpdateEnrollmentStatusInput,
+} from "./enrollment.schemas.js";
 
 export const enrollmentRepository = {
   countActiveByWorkshop(workshopId: string) {
@@ -19,6 +23,27 @@ export const enrollmentRepository = {
         status: EnrollmentStatus.PENDENTE,
       },
     });
+  },
+
+  findById(id: string) {
+    return prisma.enrollment.findUnique({ where: { id } });
+  },
+
+  async updateStatus(
+    id: string,
+    currentStatus: EnrollmentStatus,
+    status: UpdateEnrollmentStatusInput["status"],
+  ) {
+    const result = await prisma.enrollment.updateMany({
+      where: { id, status: currentStatus },
+      data: { status },
+    });
+
+    if (result.count === 0) {
+      return null;
+    }
+
+    return prisma.enrollment.findUnique({ where: { id } });
   },
 
   async list(query: ListEnrollmentsQuery) {

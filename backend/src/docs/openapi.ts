@@ -128,6 +128,18 @@ export const openApiDocument = {
           workshopId: { type: "string", format: "uuid" },
         },
       },
+      UpdateEnrollmentStatusInput: {
+        type: "object",
+        additionalProperties: false,
+        required: ["status"],
+        properties: {
+          status: {
+            type: "string",
+            enum: ["CONFIRMADA", "CANCELADA"],
+            example: "CONFIRMADA",
+          },
+        },
+      },
       LoginInput: {
         type: "object",
         additionalProperties: false,
@@ -396,6 +408,58 @@ export const openApiDocument = {
             },
           },
           "401": { $ref: "#/components/responses/Unauthenticated" },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/inscricoes/{id}/status": {
+      patch: {
+        tags: ["Administração"],
+        summary: "Altera o status de uma inscrição",
+        description:
+          "Permite confirmar ou cancelar uma inscrição. Inscrições canceladas não podem ser reabertas e o status não pode voltar para PENDENTE.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateEnrollmentStatusInput" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Status atualizado",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/Enrollment" } },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": {
+            description: "Inscrição não encontrada",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "409": {
+            description: "Transição inválida, status repetido ou alteração concorrente",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },

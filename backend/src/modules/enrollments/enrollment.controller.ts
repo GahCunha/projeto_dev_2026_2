@@ -1,5 +1,10 @@
 import type { RequestHandler } from "express";
-import { createEnrollmentSchema, listEnrollmentsQuerySchema } from "./enrollment.schemas.js";
+import {
+  createEnrollmentSchema,
+  enrollmentParamsSchema,
+  listEnrollmentsQuerySchema,
+  updateEnrollmentStatusSchema,
+} from "./enrollment.schemas.js";
 import { enrollmentService } from "./enrollment.service.js";
 
 export const createEnrollment: RequestHandler = async (req, res) => {
@@ -14,4 +19,12 @@ export const listEnrollments: RequestHandler = async (req, res) => {
   const result = await enrollmentService.list(query);
 
   res.json({ data: result.items, pagination: result.pagination });
+};
+
+export const updateEnrollmentStatus: RequestHandler = async (req, res) => {
+  const { id } = enrollmentParamsSchema.parse(req.params);
+  const input = updateEnrollmentStatusSchema.parse(req.body);
+  const enrollment = await enrollmentService.updateStatus(id, input);
+
+  res.json({ data: enrollment });
 };
