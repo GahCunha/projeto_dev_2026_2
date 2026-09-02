@@ -14,7 +14,10 @@ function futureDate(days: number) {
 const workshops = [
   {
     title: "Carpintaria para iniciantes",
+    category: "Carpintaria",
     description: "Aprenda técnicas fundamentais e construa sua primeira peça em madeira.",
+    imageUrl: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b",
+    materials: ["Avental", "Óculos de proteção"],
     startsAt: futureDate(14),
     durationMin: 240,
     capacity: 12,
@@ -22,7 +25,10 @@ const workshops = [
   },
   {
     title: "Crochê: primeiros pontos",
+    category: "Crochê",
     description: "Uma introdução acolhedora ao crochê, do manuseio da agulha à primeira peça.",
+    imageUrl: "https://images.unsplash.com/photo-1604881991720-f91add269bed",
+    materials: ["Agulha de crochê 3,5 mm", "Novelo de algodão"],
     startsAt: futureDate(21),
     durationMin: 180,
     capacity: 16,
@@ -30,7 +36,10 @@ const workshops = [
   },
   {
     title: "Cerâmica fria criativa",
+    category: "Modelagem",
     description: "Modele e finalize pequenos objetos decorativos usando cerâmica fria.",
+    imageUrl: "https://images.unsplash.com/photo-1610701596007-11502861dcfa",
+    materials: ["Avental", "Pano de limpeza"],
     startsAt: futureDate(28),
     durationMin: 210,
     capacity: 10,
@@ -59,7 +68,9 @@ async function run() {
       where: { title: workshop.title },
     });
 
-    if (!existingWorkshop) {
+    if (existingWorkshop) {
+      await prisma.workshop.update({ where: { id: existingWorkshop.id }, data: workshop });
+    } else {
       await prisma.workshop.create({ data: workshop });
     }
   }
@@ -72,4 +83,3 @@ run()
     await prisma.$disconnect();
     process.exit(1);
   });
-

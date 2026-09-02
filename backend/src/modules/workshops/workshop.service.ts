@@ -27,9 +27,9 @@ export const workshopService = {
   },
 
   async findActiveById(id: string) {
-    const workshop = await workshopRepository.findById(id);
+    const workshop = await workshopRepository.findPublicById(id);
 
-    if (!workshop || !workshop.active) {
+    if (!workshop) {
       throw new AppError("Oficina não encontrada ou indisponível.", 404, "WORKSHOP_NOT_FOUND");
     }
 

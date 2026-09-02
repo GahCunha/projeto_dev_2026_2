@@ -132,6 +132,8 @@ Uma oficina desativada continua armazenada com suas inscrições, mas deixa de a
 
 A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina.
 
+As consultas públicas de oficinas retornam somente oficinas ativas e futuras. Cada oficina inclui `category`, `imageUrl`, `materials` e `availableSeats`. As vagas disponíveis não são armazenadas: a API subtrai da capacidade as inscrições pendentes e confirmadas em cada consulta.
+
 ## Testes
 
 Com os containers ativos, execute na raiz do repositório:
@@ -191,7 +193,10 @@ Os filtros são opcionais. Para criar uma oficina, envie título, descrição, d
 ```json
 {
   "title": "Cerâmica fria",
+  "category": "Modelagem",
   "description": "Aprenda a modelar e finalizar pequenas peças decorativas.",
+  "imageUrl": "https://example.com/ceramica.jpg",
+  "materials": ["Avental", "Pano de limpeza"],
   "startsAt": "2026-10-20T14:00:00.000Z",
   "durationMin": 180,
   "capacity": 12,

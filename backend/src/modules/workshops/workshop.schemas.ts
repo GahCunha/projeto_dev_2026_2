@@ -7,7 +7,10 @@ export const workshopParamsSchema = z.object({
 export const createWorkshopSchema = z
   .object({
     title: z.string().trim().min(3).max(120),
+    category: z.string().trim().min(2).max(80),
     description: z.string().trim().min(10).max(1000),
+    imageUrl: z.string().trim().url().max(2048).nullable().optional(),
+    materials: z.array(z.string().trim().min(2).max(120)).max(20).optional(),
     startsAt: z.coerce.date().refine((date) => date > new Date(), {
       message: "A data da oficina deve estar no futuro",
     }),

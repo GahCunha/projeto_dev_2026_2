@@ -31,7 +31,10 @@ export const openApiDocument = {
         required: [
           "id",
           "title",
+          "category",
           "description",
+          "imageUrl",
+          "materials",
           "startsAt",
           "durationMin",
           "capacity",
@@ -43,13 +46,33 @@ export const openApiDocument = {
         properties: {
           id: { type: "string", format: "uuid" },
           title: { type: "string", example: "Carpintaria para iniciantes" },
+          category: { type: "string", example: "Carpintaria" },
           description: {
             type: "string",
             example: "Aprenda técnicas fundamentais e construa sua primeira peça em madeira.",
           },
+          imageUrl: {
+            type: "string",
+            format: "uri",
+            nullable: true,
+            example: "https://example.com/carpintaria.jpg",
+          },
+          materials: {
+            type: "array",
+            maxItems: 20,
+            items: { type: "string" },
+            example: ["Avental", "Óculos de proteção"],
+          },
           startsAt: { type: "string", format: "date-time" },
           durationMin: { type: "integer", minimum: 30, example: 240 },
           capacity: { type: "integer", minimum: 1, example: 12 },
+          availableSeats: {
+            type: "integer",
+            minimum: 0,
+            example: 8,
+            description:
+              "Capacidade menos inscrições pendentes e confirmadas; calculada no momento da consulta pública.",
+          },
           location: { type: "string", example: "Ateliê Madeira, sala 1" },
           active: { type: "boolean", example: true },
           createdAt: { type: "string", format: "date-time" },
@@ -131,14 +154,36 @@ export const openApiDocument = {
       CreateWorkshopInput: {
         type: "object",
         additionalProperties: false,
-        required: ["title", "description", "startsAt", "durationMin", "capacity", "location"],
+        required: [
+          "title",
+          "category",
+          "description",
+          "startsAt",
+          "durationMin",
+          "capacity",
+          "location",
+        ],
         properties: {
           title: { type: "string", minLength: 3, maxLength: 120, example: "Cerâmica fria" },
+          category: { type: "string", minLength: 2, maxLength: 80, example: "Modelagem" },
           description: {
             type: "string",
             minLength: 10,
             maxLength: 1000,
             example: "Aprenda a modelar e finalizar pequenas peças decorativas.",
+          },
+          imageUrl: {
+            type: "string",
+            format: "uri",
+            nullable: true,
+            maxLength: 2048,
+            example: "https://example.com/ceramica.jpg",
+          },
+          materials: {
+            type: "array",
+            maxItems: 20,
+            items: { type: "string", minLength: 2, maxLength: 120 },
+            example: ["Avental", "Pano de limpeza"],
           },
           startsAt: { type: "string", format: "date-time" },
           durationMin: { type: "integer", minimum: 30, maximum: 1440, example: 180 },
@@ -152,7 +197,14 @@ export const openApiDocument = {
         minProperties: 1,
         properties: {
           title: { type: "string", minLength: 3, maxLength: 120 },
+          category: { type: "string", minLength: 2, maxLength: 80 },
           description: { type: "string", minLength: 10, maxLength: 1000 },
+          imageUrl: { type: "string", format: "uri", nullable: true, maxLength: 2048 },
+          materials: {
+            type: "array",
+            maxItems: 20,
+            items: { type: "string", minLength: 2, maxLength: 120 },
+          },
           startsAt: { type: "string", format: "date-time" },
           durationMin: { type: "integer", minimum: 30, maximum: 1440 },
           capacity: { type: "integer", minimum: 1, maximum: 500 },
@@ -246,6 +298,8 @@ export const openApiDocument = {
       get: {
         tags: ["Oficinas"],
         summary: "Lista oficinas ativas",
+        description:
+          "Retorna somente oficinas ativas e futuras. Inclui categoria, imagem, materiais e vagas disponíveis calculadas.",
         responses: {
           "200": {
             description: "Oficinas ordenadas pela data de início",

@@ -103,7 +103,10 @@ describe("administrative workshops", () => {
     const agent = await authenticatedAgent();
     const response = await agent.post("/api/admin/oficinas").send({
       title: `Carpintaria ${marker}`,
+      category: "Carpintaria",
       description: "Introdução segura às principais ferramentas de carpintaria.",
+      imageUrl: "https://example.com/carpintaria.jpg",
+      materials: ["Avental", "Óculos de proteção"],
       startsAt: futureDate(30).toISOString(),
       durationMin: 180,
       capacity: 15,
@@ -113,6 +116,9 @@ describe("administrative workshops", () => {
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({
       title: `Carpintaria ${marker}`,
+      category: "Carpintaria",
+      imageUrl: "https://example.com/carpintaria.jpg",
+      materials: ["Avental", "Óculos de proteção"],
       capacity: 15,
       active: true,
     });
@@ -126,6 +132,7 @@ describe("administrative workshops", () => {
     const agent = await authenticatedAgent();
     const response = await agent.post("/api/admin/oficinas").send({
       title: "Oficina no passado",
+      category: "Outros",
       description: "Esta oficina possui dados suficientes, mas uma data inválida.",
       startsAt: new Date(Date.now() - 60_000).toISOString(),
       durationMin: 120,

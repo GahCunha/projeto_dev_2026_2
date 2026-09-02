@@ -1,0 +1,4 @@
+ALTER TABLE "oficinas"
+ADD COLUMN "categoria" TEXT NOT NULL DEFAULT 'Outros',
+ADD COLUMN "imagem_url" TEXT,
+ADD COLUMN "materiais" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

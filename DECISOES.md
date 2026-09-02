@@ -70,6 +70,12 @@ A área administrativa lista oficinas ativas e inativas, diferentemente da área
 
 Editar dados e alterar o estado ativo são operações separadas. Isso evita desativação acidental em uma edição comum. A capacidade nunca pode ser reduzida abaixo das inscrições pendentes e confirmadas. Desativar uma oficina não remove seus dados ou inscrições, apenas a retira da consulta pública.
 
+### Apresentação pública das oficinas
+
+A API pública omite oficinas inativas ou cuja data já passou. Categoria, URL de capa e materiais ficam armazenados com a oficina e são retornados ao frontend. O filtro visual por categoria será feito inicialmente no frontend.
+
+`availableSeats` não é armazenado no banco. A cada consulta pública, ele é calculado subtraindo da capacidade as inscrições `PENDENTE` e `CONFIRMADA`; inscrições canceladas não ocupam vaga. Isso evita sincronização manual e dados divergentes.
+
 ### Datas dos dados iniciais
 
 O seed cria oficinas com datas relativas ao momento da execução. Assim, os dados de demonstração continuam futuros quando o projeto é avaliado.

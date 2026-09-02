@@ -29,7 +29,10 @@ model User {
 model Workshop {
   id           String       @id @default(uuid())
   title        String       @map("titulo")
+  category     String       @default("Outros") @map("categoria")
   description  String       @map("descricao")
+  imageUrl     String?      @map("imagem_url")
+  materials    String[]     @default([]) @map("materiais")
   startsAt     DateTime     @map("data_inicio")
   durationMin  Int          @map("duracao_min")
   capacity     Int          @map("vagas")
@@ -57,5 +60,4 @@ model Enrollment {
   @@index([status, createdAt])
   @@map("inscricoes")
 }
-
 

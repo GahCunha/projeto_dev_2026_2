@@ -1,3 +1,4 @@
+import { EnrollmentStatus } from "@prisma/client";
 import { prisma } from "../../config/database.js";
 import type {
   CreateWorkshopInput,
@@ -6,11 +7,52 @@ import type {
 } from "./workshop.schemas.js";
 
 export const workshopRepository = {
-  listActive() {
-    return prisma.workshop.findMany({
-      where: { active: true },
+  async listActive() {
+    const workshops = await prisma.workshop.findMany({
+      where: { active: true, startsAt: { gt: new Date() } },
       orderBy: { startsAt: "asc" },
+      include: {
+        _count: {
+          select: {
+            enrollments: {
+              where: {
+                status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
+              },
+            },
+          },
+        },
+      },
     });
+
+    return workshops.map(({ _count, ...workshop }) => ({
+      ...workshop,
+      availableSeats: Math.max(workshop.capacity - _count.enrollments, 0),
+    }));
+  },
+
+  async findPublicById(id: string) {
+    const workshop = await prisma.workshop.findFirst({
+      where: { id, active: true, startsAt: { gt: new Date() } },
+      include: {
+        _count: {
+          select: {
+            enrollments: {
+              where: {
+                status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!workshop) return null;
+
+    const { _count, ...data } = workshop;
+    return {
+      ...data,
+      availableSeats: Math.max(workshop.capacity - _count.enrollments, 0),
+    };
   },
 
   async list(query: ListWorkshopsQuery) {
