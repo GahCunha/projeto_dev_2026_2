@@ -26,7 +26,7 @@ cd projeto_dev_2026_2
 docker compose up --build
 ```
 
-O primeiro início cria as tabelas por migration e cadastra três oficinas pelo seed. A API responde em `http://localhost:3333`.
+O primeiro início cria as tabelas por migration, cadastra três oficinas pelo seed e constrói o frontend. A aplicação fica disponível em `http://localhost:5173` e a API responde em `http://localhost:3333`.
 
 O administrador de demonstração também é criado pelo seed:
 
@@ -37,12 +37,15 @@ Senha: FeitoAMao@2026
 
 Essas credenciais são apenas para desenvolvimento e podem ser alteradas pelas variáveis `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
 
-Verifique a aplicação:
+Verifique a API:
 
 ```bash
 curl http://localhost:3333/api/saude
-curl http://localhost:3333/api/oficinas
 ```
+
+Depois, abra `http://localhost:5173` no navegador.
+
+No ambiente Docker, o Nginx do frontend encaminha chamadas em `/api` para a API. No desenvolvimento local, o Vite faz o mesmo encaminhamento.
 
 A documentação interativa fica disponível em `http://localhost:3333/api/docs` e o documento OpenAPI em `http://localhost:3333/api/docs.json`.
 
