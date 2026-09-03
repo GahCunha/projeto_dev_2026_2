@@ -1,32 +1,91 @@
 @import "tailwindcss";
 
-:root {
-  font-family: system-ui, sans-serif;
-  color: #292825;
-  background: #f3ecdd;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  --color-carbon: #25324a;
+  --color-blue: #3567a8;
+  --color-saffron: #e7a928;
+  --color-ochre: #805b00;
+  --color-green: #4f6f64;
+  --color-paper: #f3ecdd;
+  --color-light: #fbf8f1;
+  --color-deep: #e8dfcf;
+  --color-ink: #292825;
+  --color-muted: #6d675d;
+  --color-rule: #cfc3af;
+  --color-danger: #a8342d;
+  --color-success: #315d4e;
+  --color-tape: #ddd5c6;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --animate-thread-in: thread-in 1.2s ease-out both;
+  --animate-loading: loading 1.4s ease infinite;
+  --shadow-craft-sm: 3px 4px 0 color-mix(in srgb, var(--color-carbon) 7%, transparent);
+  --shadow-craft: 7px 9px 0 color-mix(in srgb, var(--color-carbon) 11%, transparent);
+  --shadow-button: 4px 4px 0 var(--color-carbon);
+  --shadow-photo: 8px 10px 22px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  --shadow-offset: 6px 7px 0 color-mix(in srgb, var(--color-carbon) 9%, transparent);
 }
 
-* {
-  box-sizing: border-box;
+@utility craft-fallback {
+  background-image: linear-gradient(135deg, transparent 48%, color-mix(in srgb, var(--color-carbon) 7%, transparent) 49%, color-mix(in srgb, var(--color-carbon) 7%, transparent) 51%, transparent 52%);
+  background-size: 1.5rem 1.5rem;
 }
 
-html {
-  scroll-behavior: smooth;
+@utility loading-surface {
+  background-image: linear-gradient(to right, var(--color-deep), var(--color-light), var(--color-deep));
+  background-size: 240% 100%;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+@layer base {
+  :root {
+    color: var(--color-ink);
+    background: var(--color-paper);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--color-paper);
+    background-image: radial-gradient(color-mix(in srgb, var(--color-carbon) 5%, transparent) 0.7px, transparent 0.7px);
+    background-size: 7px 7px;
+    overflow-x: hidden;
+  }
+
+  button,
+  a { touch-action: manipulation; }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 3px solid var(--color-blue);
+    outline-offset: 3px;
+  }
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+@keyframes thread-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+
+@keyframes loading {
+  to { background-position-x: -240%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
