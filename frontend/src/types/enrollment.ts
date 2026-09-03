@@ -17,3 +17,33 @@ export type Enrollment = {
 export type EnrollmentResponse = {
   data: Enrollment
 }
+
+export type EnrollmentStatus = Enrollment['status']
+
+export type AdminEnrollment = Enrollment & {
+  workshop: {
+    id: string
+    title: string
+    startsAt: string
+    active: boolean
+  }
+}
+
+export type EnrollmentPagination = {
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
+export type AdminEnrollmentsResponse = {
+  data: AdminEnrollment[]
+  pagination: EnrollmentPagination
+}
+
+export type AdminEnrollmentFilters = {
+  search?: string
+  status?: EnrollmentStatus
+  page: number
+  pageSize?: number
+}

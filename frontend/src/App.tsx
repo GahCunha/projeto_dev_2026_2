@@ -3,6 +3,7 @@ import { AdminLayout } from './components/admin/admin-layout'
 import { AdminAuthBoundary } from './components/admin/admin-auth-boundary'
 import { ProtectedRoute } from './components/admin/protected-route'
 import { AdminHomePage } from './pages/admin-home-page'
+import { AdminEnrollmentsPage } from './pages/admin-enrollments-page'
 import { AdminLoginPage } from './pages/admin-login-page'
 import { AdminPlaceholderPage } from './pages/admin-placeholder-page'
 import { PublicHomePage } from './pages/public-home-page'
@@ -16,7 +17,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminHomePage />} />
-            <Route path="inscricoes" element={<AdminPlaceholderPage section="Inscrições" />} />
+            <Route path="inscricoes" element={<AdminEnrollmentsPage />} />
             <Route path="oficinas" element={<AdminPlaceholderPage section="Oficinas" />} />
           </Route>
         </Route>

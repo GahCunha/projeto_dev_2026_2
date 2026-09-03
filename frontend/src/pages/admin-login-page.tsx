@@ -15,8 +15,9 @@ export function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const destination = (location.state as LocationState | null)?.from?.pathname ?? '/admin'
 
-  if (!isLoading && user) return <Navigate to="/admin" replace />
+  if (!isLoading && user) return <Navigate to={destination} replace />
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,7 +25,6 @@ export function AdminLoginPage() {
     setIsSubmitting(true)
     try {
       await login({ email, password })
-      const destination = (location.state as LocationState | null)?.from?.pathname ?? '/admin'
       navigate(destination, { replace: true })
     } catch (requestError) {
       setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível entrar agora.')
