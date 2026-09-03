@@ -18,3 +18,40 @@ export type Workshop = {
 export type WorkshopsResponse = {
   data: Workshop[]
 }
+
+export type AdminWorkshop = Omit<Workshop, 'availableSeats'>
+
+export type WorkshopFormData = {
+  title: string
+  category: string
+  description: string
+  imageUrl: string | null
+  materials: string[]
+  startsAt: string
+  durationMin: number
+  capacity: number
+  location: string
+}
+
+export type AdminWorkshopFilters = {
+  active?: boolean
+  search?: string
+  page: number
+  pageSize?: number
+}
+
+export type WorkshopPagination = {
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
+export type AdminWorkshopsResponse = {
+  data: AdminWorkshop[]
+  pagination: WorkshopPagination
+}
+
+export type AdminWorkshopResponse = {
+  data: AdminWorkshop
+}
