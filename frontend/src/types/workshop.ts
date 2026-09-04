@@ -19,7 +19,10 @@ export type WorkshopsResponse = {
   data: Workshop[]
 }
 
-export type AdminWorkshop = Omit<Workshop, 'availableSeats'>
+export type AdminWorkshop = Workshop & {
+  enrollmentCount: number
+  occupiedSeats: number
+}
 
 export type WorkshopFormData = {
   title: string

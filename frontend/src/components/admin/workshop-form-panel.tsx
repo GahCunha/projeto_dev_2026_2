@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { ApiError } from '../../services/api-client'
 import type { AdminWorkshop, WorkshopFormData } from '../../types/workshop'
 import { Button } from '../ui/button'
+import { ImageFallback } from '../ui/image-fallback'
 
 type WorkshopFormPanelProps = {
   workshop?: AdminWorkshop
@@ -113,6 +114,10 @@ export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormP
             <FormField label="Imagem de capa (URL)" id="imageUrl">
               <input className={inputStyles} id="imageUrl" type="url" value={form.imageUrl ?? ''} onChange={(event) => updateField('imageUrl', event.target.value)} placeholder="https://..." />
             </FormField>
+            <div className="sm:col-span-2">
+              <p className="mb-1.5 font-mono text-xs uppercase tracking-wider text-muted">Prévia da capa</p>
+              <CoverPreview imageUrl={form.imageUrl} title={form.title} />
+            </div>
             <FormField label="Descrição" id="description" className="sm:col-span-2">
               <textarea className={`${inputStyles} min-h-28 resize-y py-3`} id="description" value={form.description} onChange={(event) => updateField('description', event.target.value)} minLength={10} maxLength={1000} required />
             </FormField>
@@ -146,6 +151,23 @@ export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormP
           </div>
         </form>
       </section>
+    </div>
+  )
+}
+
+function CoverPreview({ imageUrl, title }: { imageUrl: string | null; title: string }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const normalizedUrl = imageUrl?.trim() || null
+  const canShowImage = normalizedUrl && normalizedUrl !== failedUrl
+
+  return (
+    <div className="relative aspect-[16/7] overflow-hidden border border-rule bg-deep shadow-craft-sm">
+      {canShowImage
+        ? <img className="size-full object-cover" src={normalizedUrl} alt={title ? `Prévia da capa de ${title}` : 'Prévia da capa da oficina'} onError={() => setFailedUrl(normalizedUrl)} />
+        : <ImageFallback />}
+      <span className="absolute bottom-3 left-3 bg-carbon/80 px-2 py-1 font-mono text-xs uppercase tracking-wider text-paper">
+        {normalizedUrl && normalizedUrl === failedUrl ? 'Não foi possível carregar a imagem' : canShowImage ? 'Prévia' : 'Sem imagem de capa'}
+      </span>
     </div>
   )
 }

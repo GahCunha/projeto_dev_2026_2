@@ -1,13 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminPagination } from '../components/admin/admin-pagination'
+import { ConfirmationDialog } from '../components/admin/confirmation-dialog'
 import { EnrollmentsTable } from '../components/admin/enrollments-table'
 import { Button } from '../components/ui/button'
 import { EmptyState } from '../components/ui/empty-state'
-import { getAdminEnrollments } from '../services/admin-enrollment-service'
+import { getAdminEnrollments, updateAdminEnrollmentStatus } from '../services/admin-enrollment-service'
 import type { AdminEnrollment, EnrollmentPagination, EnrollmentStatus } from '../types/enrollment'
 
 const validStatuses: EnrollmentStatus[] = ['PENDENTE', 'CONFIRMADA', 'CANCELADA']
+type NextEnrollmentStatus = Extract<EnrollmentStatus, 'CONFIRMADA' | 'CANCELADA'>
+type PendingStatusChange = { enrollment: AdminEnrollment; status: NextEnrollmentStatus }
 
 const initialPagination: EnrollmentPagination = {
   page: 1,
@@ -21,6 +24,8 @@ export function AdminEnrollmentsPage() {
   const search = searchParams.get('search') ?? ''
   const statusParam = searchParams.get('status') as EnrollmentStatus | null
   const status = statusParam && validStatuses.includes(statusParam) ? statusParam : undefined
+  const workshopId = searchParams.get('workshopId') ?? undefined
+  const workshopTitle = searchParams.get('workshopTitle') ?? undefined
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(search)
@@ -28,12 +33,15 @@ export function AdminEnrollmentsPage() {
   const [pagination, setPagination] = useState(initialPagination)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
+  const [pendingStatusChange, setPendingStatusChange] = useState<PendingStatusChange | null>(null)
+  const [updatingEnrollmentId, setUpdatingEnrollmentId] = useState<string>()
 
   useEffect(() => {
     const controller = new AbortController()
 
-    getAdminEnrollments({ search: search || undefined, status, page }, controller.signal)
+    getAdminEnrollments({ search: search || undefined, status, workshopId, page }, controller.signal)
       .then((response) => {
         setEnrollments(response.data)
         setPagination(response.pagination)
@@ -47,7 +55,7 @@ export function AdminEnrollmentsPage() {
       })
 
     return () => controller.abort()
-  }, [page, requestKey, search, status])
+  }, [page, requestKey, search, status, workshopId])
 
   function updateFilters(values: { search?: string; status?: EnrollmentStatus | null; page?: number }) {
     const nextParams = new URLSearchParams()
@@ -57,12 +65,15 @@ export function AdminEnrollmentsPage() {
 
     if (nextSearch) nextParams.set('search', nextSearch)
     if (nextStatus) nextParams.set('status', nextStatus)
+    if (workshopId) nextParams.set('workshopId', workshopId)
+    if (workshopTitle) nextParams.set('workshopTitle', workshopTitle)
     if (nextPage > 1) nextParams.set('page', String(nextPage))
 
     if (nextParams.toString() === searchParams.toString()) return
 
     setIsLoading(true)
     setError(null)
+    setFeedback(null)
     setSearchParams(nextParams)
   }
 
@@ -75,6 +86,7 @@ export function AdminEnrollmentsPage() {
     setSearchInput('')
     setIsLoading(true)
     setError(null)
+    setFeedback(null)
     setSearchParams(new URLSearchParams())
   }
 
@@ -84,7 +96,26 @@ export function AdminEnrollmentsPage() {
     setRequestKey((key) => key + 1)
   }
 
-  const hasFilters = Boolean(search || status)
+  async function changeEnrollmentStatus() {
+    if (!pendingStatusChange) return
+
+    const { enrollment, status: nextStatus } = pendingStatusChange
+    setUpdatingEnrollmentId(enrollment.id)
+    try {
+      await updateAdminEnrollmentStatus(enrollment.id, nextStatus)
+      setPendingStatusChange(null)
+      setFeedback(`Inscrição de ${enrollment.name} ${nextStatus === 'CONFIRMADA' ? 'confirmada' : 'cancelada'} com sucesso.`)
+      setIsLoading(true)
+      setRequestKey((key) => key + 1)
+    } catch (requestError) {
+      setPendingStatusChange(null)
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível alterar a inscrição.')
+    } finally {
+      setUpdatingEnrollmentId(undefined)
+    }
+  }
+
+  const hasFilters = Boolean(search || status || workshopId)
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -96,6 +127,25 @@ export function AdminEnrollmentsPage() {
         </div>
         {!isLoading && !error && <p className="font-mono text-xs uppercase tracking-wider text-muted">{pagination.totalItems} {pagination.totalItems === 1 ? 'registro' : 'registros'}</p>}
       </div>
+
+      {feedback && (
+        <div className="mb-5 flex items-center justify-between gap-4 border-l-4 border-success bg-success/10 px-4 py-3 text-sm text-success" role="status">
+          <span>{feedback}</span>
+          <button className="min-h-10 px-2 font-bold" type="button" onClick={() => setFeedback(null)} aria-label="Fechar mensagem">×</button>
+        </div>
+      )}
+
+      {workshopId && (
+        <div className="mb-5 flex flex-col gap-3 border-l-4 border-saffron bg-saffron/10 px-4 py-3 text-sm text-carbon sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Inscrições da oficina <strong>{workshopTitle ? `“${workshopTitle}”` : 'selecionada'}</strong>.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" type="button" onClick={clearFilters}>Limpar filtros</button>
+            <Link className="shrink-0 font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" to="/admin/oficinas">Voltar às oficinas</Link>
+          </div>
+        </div>
+      )}
 
       <form className="mb-5 grid gap-3 border border-rule bg-paper p-4 sm:grid-cols-[1fr_13rem_auto]" onSubmit={handleSearch}>
         <div>
@@ -130,9 +180,22 @@ export function AdminEnrollmentsPage() {
 
       {!isLoading && !error && enrollments.length > 0 && (
         <>
-          <EnrollmentsTable enrollments={enrollments} />
+          <EnrollmentsTable enrollments={enrollments} updatingEnrollmentId={updatingEnrollmentId} onStatusChange={(enrollment, nextStatus) => setPendingStatusChange({ enrollment, status: nextStatus })} />
           <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
         </>
+      )}
+
+      {pendingStatusChange && (
+        <ConfirmationDialog
+          title={`${pendingStatusChange.status === 'CONFIRMADA' ? 'Confirmar' : 'Cancelar'} inscrição de ${pendingStatusChange.enrollment.name}?`}
+          description={pendingStatusChange.status === 'CONFIRMADA'
+            ? `A vaga em “${pendingStatusChange.enrollment.workshop.title}” será confirmada para esta pessoa.`
+            : `A vaga em “${pendingStatusChange.enrollment.workshop.title}” será liberada e esta ação não poderá ser desfeita.`}
+          confirmLabel={pendingStatusChange.status === 'CONFIRMADA' ? 'Confirmar inscrição' : 'Cancelar inscrição'}
+          isSubmitting={updatingEnrollmentId === pendingStatusChange.enrollment.id}
+          onConfirm={changeEnrollmentStatus}
+          onClose={() => setPendingStatusChange(null)}
+        />
       )}
     </div>
   )

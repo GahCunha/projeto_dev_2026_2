@@ -44,6 +44,7 @@ export type AdminEnrollmentsResponse = {
 export type AdminEnrollmentFilters = {
   search?: string
   status?: EnrollmentStatus
+  workshopId?: string
   page: number
   pageSize?: number
 }

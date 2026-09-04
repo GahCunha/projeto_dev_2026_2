@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { AdminWorkshop } from '../../types/workshop'
 import { WorkshopStatusBadge } from './workshop-status-badge'
 
@@ -37,8 +38,12 @@ export function AdminWorkshopCard({ workshop, onEdit, onStatusChange }: AdminWor
             <dd className="mt-1 text-carbon">{workshop.durationMin} min</dd>
           </div>
           <div>
-            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Vagas</dt>
-            <dd className="mt-1 text-carbon">{workshop.capacity}</dd>
+            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Ocupação</dt>
+            <dd className="mt-1 font-bold tabular-nums text-carbon">{workshop.occupiedSeats} de {workshop.capacity}</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Disponíveis</dt>
+            <dd className={`mt-1 font-bold tabular-nums ${workshop.availableSeats === 0 ? 'text-danger' : 'text-success'}`}>{workshop.availableSeats}</dd>
           </div>
           <div className="col-span-2">
             <dt className="font-mono text-xs uppercase tracking-wider text-muted">Local</dt>
@@ -46,7 +51,15 @@ export function AdminWorkshopCard({ workshop, onEdit, onStatusChange }: AdminWor
           </div>
         </dl>
 
-        <div className="mt-auto flex gap-4 border-t border-rule/70 pt-4">
+        <p className="mt-4 text-xs text-muted"><strong className="tabular-nums text-carbon">{workshop.enrollmentCount}</strong> {workshop.enrollmentCount === 1 ? 'inscrição no total' : 'inscrições no total'}, incluindo canceladas.</p>
+
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-rule/70 pt-4">
+          <Link
+            className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4"
+            to={`/admin/inscricoes?${new URLSearchParams({ workshopId: workshop.id, workshopTitle: workshop.title })}`}
+          >
+            Gerir inscrições
+          </Link>
           <button className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" type="button" onClick={() => onEdit(workshop)}>Editar</button>
           <button className={`ml-auto font-mono text-xs font-bold uppercase tracking-wider underline underline-offset-4 ${workshop.active ? 'text-danger' : 'text-success'}`} type="button" onClick={() => onStatusChange(workshop)}>{workshop.active ? 'Desativar' : 'Ativar'}</button>
         </div>

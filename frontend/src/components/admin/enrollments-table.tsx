@@ -1,5 +1,13 @@
-import type { AdminEnrollment } from '../../types/enrollment'
+import type { AdminEnrollment, EnrollmentStatus } from '../../types/enrollment'
 import { EnrollmentStatusBadge } from './enrollment-status-badge'
+
+type NextEnrollmentStatus = Extract<EnrollmentStatus, 'CONFIRMADA' | 'CANCELADA'>
+
+type EnrollmentsTableProps = {
+  enrollments: AdminEnrollment[]
+  updatingEnrollmentId?: string
+  onStatusChange: (enrollment: AdminEnrollment, status: NextEnrollmentStatus) => void
+}
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -9,7 +17,7 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit',
 })
 
-export function EnrollmentsTable({ enrollments }: { enrollments: AdminEnrollment[] }) {
+export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusChange }: EnrollmentsTableProps) {
   return (
     <>
       <div className="space-y-3 sm:hidden">
@@ -18,6 +26,7 @@ export function EnrollmentsTable({ enrollments }: { enrollments: AdminEnrollment
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <strong className="block truncate text-sm text-carbon">{enrollment.name}</strong>
+                <span className="sr-only"> — </span>
                 <span className="mt-1 block truncate text-sm text-muted">{enrollment.email}</span>
               </div>
               <EnrollmentStatusBadge status={enrollment.status} />
@@ -32,6 +41,7 @@ export function EnrollmentsTable({ enrollments }: { enrollments: AdminEnrollment
                 <dd className="mt-1 text-sm text-muted">{dateFormatter.format(new Date(enrollment.workshop.startsAt))}</dd>
               </div>
             </dl>
+            <EnrollmentActions enrollment={enrollment} disabled={updatingEnrollmentId === enrollment.id} onStatusChange={onStatusChange} className="mt-4 border-t border-rule/70 pt-3" />
           </article>
         ))}
       </div>
@@ -45,23 +55,28 @@ export function EnrollmentsTable({ enrollments }: { enrollments: AdminEnrollment
               <th className="px-5 py-3 font-normal">Oficina</th>
               <th className="px-5 py-3 font-normal">Data</th>
               <th className="px-5 py-3 font-normal">Status</th>
+              <th className="px-5 py-3 text-right font-normal">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-rule/70">
             {enrollments.map((enrollment) => (
               <tr className="transition hover:bg-light" key={enrollment.id}>
-                <td className="px-5 py-4 align-top">
+                <td className="px-5 py-4 align-middle">
                   <strong className="block text-sm text-carbon">{enrollment.name}</strong>
+                  <span className="sr-only"> — </span>
                   <span className="mt-1 block text-sm text-muted">{enrollment.email}</span>
                 </td>
-                <td className="px-5 py-4 align-top">
+                <td className="px-5 py-4 align-middle">
                   <span className="block max-w-xs text-sm font-bold text-carbon">{enrollment.workshop.title}</span>
                   {!enrollment.workshop.active && <small className="mt-1 block text-danger">Oficina inativa</small>}
                 </td>
-                <td className="whitespace-nowrap px-5 py-4 align-top text-sm text-muted">
+                <td className="whitespace-nowrap px-5 py-4 align-middle text-sm text-muted">
                   {dateFormatter.format(new Date(enrollment.workshop.startsAt))}
                 </td>
-                <td className="px-5 py-4 align-top"><EnrollmentStatusBadge status={enrollment.status} /></td>
+                <td className="px-5 py-4 align-middle"><EnrollmentStatusBadge status={enrollment.status} /></td>
+                <td className="px-5 py-4 align-middle">
+                  <EnrollmentActions enrollment={enrollment} disabled={updatingEnrollmentId === enrollment.id} onStatusChange={onStatusChange} className="justify-end" />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -69,5 +84,30 @@ export function EnrollmentsTable({ enrollments }: { enrollments: AdminEnrollment
       </div>
       </div>
     </>
+  )
+}
+
+function EnrollmentActions({ enrollment, disabled, onStatusChange, className }: {
+  enrollment: AdminEnrollment
+  disabled: boolean
+  onStatusChange: EnrollmentsTableProps['onStatusChange']
+  className?: string
+}) {
+  if (enrollment.status === 'CANCELADA') {
+    return <p className={`text-right text-xs text-muted ${className ?? ''}`}>Nenhuma ação disponível</p>
+  }
+
+  const actionStyles = 'min-h-10 font-mono text-xs font-bold uppercase tracking-wider underline underline-offset-4 disabled:cursor-wait disabled:opacity-50'
+
+  return (
+    <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${className ?? ''}`}>
+      {enrollment.status === 'PENDENTE' && (
+        <>
+          <button className={`${actionStyles} text-success`} type="button" disabled={disabled} onClick={() => onStatusChange(enrollment, 'CONFIRMADA')}>Confirmar</button>
+          <span className="sr-only"> ou </span>
+        </>
+      )}
+      <button className={`${actionStyles} text-danger`} type="button" disabled={disabled} onClick={() => onStatusChange(enrollment, 'CANCELADA')}>Cancelar</button>
+    </div>
   )
 }
