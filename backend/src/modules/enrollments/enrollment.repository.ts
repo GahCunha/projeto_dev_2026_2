@@ -26,7 +26,14 @@ export const enrollmentRepository = {
   },
 
   findById(id: string) {
-    return prisma.enrollment.findUnique({ where: { id } });
+    return prisma.enrollment.findUnique({
+      where: { id },
+      include: {
+        workshop: {
+          select: { title: true, startsAt: true, location: true },
+        },
+      },
+    });
   },
 
   async updateStatus(

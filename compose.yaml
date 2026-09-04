@@ -28,11 +28,17 @@ services:
       ADMIN_NAME: Administrador
       ADMIN_EMAIL: admin@feitoamao.local
       ADMIN_PASSWORD: FeitoAMao@2026
+      EMAIL_ENABLED: "true"
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: Feito à Mão <nao-responda@feitoamao.local>
     ports:
       - "3333:3333"
     depends_on:
       banco:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test:
         [
@@ -44,6 +50,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+    expose:
+      - "1025"
 
   frontend:
     build: ./frontend

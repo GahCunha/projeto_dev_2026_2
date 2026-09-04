@@ -2,9 +2,10 @@ import { randomUUID } from "node:crypto";
 import { EnrollmentStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/database.js";
+import { emailService } from "../../src/shared/email/email.service.js";
 
 const marker = randomUUID();
 const adminEmail = `status-admin-${marker}@example.com`;
@@ -87,6 +88,7 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
   });
 
   it("confirms a pending enrollment and persists the change", async () => {
+    const emailSpy = vi.spyOn(emailService, "sendEnrollmentConfirmed");
     const agent = await authenticatedAgent();
     const response = await agent
       .patch(`/api/admin/inscricoes/${pendingEnrollmentId}/status`)
@@ -102,9 +104,15 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
       where: { id: pendingEnrollmentId },
     });
     expect(enrollment?.status).toBe(EnrollmentStatus.CONFIRMADA);
+    expect(emailSpy).toHaveBeenCalledWith(expect.objectContaining({
+      name: "Pessoa Pendente",
+      workshop: expect.objectContaining({ title: expect.any(String) }),
+    }));
+    emailSpy.mockRestore();
   });
 
   it("cancels a confirmed enrollment", async () => {
+    const emailSpy = vi.spyOn(emailService, "sendEnrollmentCanceled");
     const agent = await authenticatedAgent();
     const response = await agent
       .patch(`/api/admin/inscricoes/${pendingEnrollmentId}/status`)
@@ -112,6 +120,11 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.status).toBe(EnrollmentStatus.CANCELADA);
+    expect(emailSpy).toHaveBeenCalledWith(expect.objectContaining({
+      name: "Pessoa Pendente",
+      workshop: expect.objectContaining({ title: expect.any(String) }),
+    }));
+    emailSpy.mockRestore();
   });
 
   it("rejects a transition from canceled to confirmed", async () => {

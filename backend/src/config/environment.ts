@@ -15,6 +15,13 @@ const environmentSchema = z.object({
   ADMIN_NAME: z.string().min(3).default("Administrador"),
   ADMIN_EMAIL: z.string().email().default("admin@feitoamao.local"),
   ADMIN_PASSWORD: z.string().min(8),
+  EMAIL_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  SMTP_HOST: z.string().min(1).default("localhost"),
+  SMTP_PORT: z.coerce.number().int().positive().default(1025),
+  SMTP_FROM: z.string().min(1).default("Feito à Mão <nao-responda@feitoamao.local>"),
 });
 
 const result = environmentSchema.safeParse(process.env);

@@ -26,7 +26,7 @@ cd projeto_dev_2026_2
 docker compose up --build
 ```
 
-O primeiro início cria as tabelas por migration, cadastra três oficinas pelo seed e constrói o frontend. A aplicação fica disponível em `http://localhost:5173` e a API responde em `http://localhost:3333`.
+O primeiro início cria as tabelas por migration, cadastra três oficinas pelo seed e constrói o frontend. A aplicação fica disponível em `http://localhost:5173`, a API responde em `http://localhost:3333` e a caixa de e-mails local fica em `http://localhost:8025`.
 
 O administrador de demonstração também é criado pelo seed:
 
@@ -48,6 +48,14 @@ Depois, abra `http://localhost:5173` no navegador.
 No ambiente Docker, o Nginx do frontend encaminha chamadas em `/api` para a API. No desenvolvimento local, o Vite faz o mesmo encaminhamento.
 
 A documentação interativa fica disponível em `http://localhost:3333/api/docs` e o documento OpenAPI em `http://localhost:3333/api/docs.json`.
+
+## E-mails locais
+
+No ambiente Docker, a API envia notificações para o Mailpit quando uma inscrição é criada, confirmada ou cancelada. Nenhuma mensagem sai para a internet: todas ficam disponíveis em `http://localhost:8025` para inspeção durante o desenvolvimento.
+
+No desenvolvimento sem Docker, mantenha `EMAIL_ENABLED=false` se não houver um servidor SMTP local. Para usar outro SMTP de desenvolvimento, configure `EMAIL_ENABLED`, `SMTP_HOST`, `SMTP_PORT` e `SMTP_FROM` no arquivo `.env`.
+
+Uma falha no envio não desfaz a criação ou a mudança de status da inscrição. A operação principal permanece salva e a API registra apenas uma mensagem genérica, sem expor os dados da pessoa.
 
 Para encerrar:
 
@@ -220,3 +228,7 @@ Os filtros são opcionais. Para criar uma oficina, envie título, descrição, d
 | `ADMIN_NAME` | Nome do administrador criado pelo seed |
 | `ADMIN_EMAIL` | E-mail do administrador inicial |
 | `ADMIN_PASSWORD` | Senha do administrador inicial |
+| `EMAIL_ENABLED` | Ativa ou desativa o envio de notificações |
+| `SMTP_HOST` | Endereço do servidor SMTP; no Docker, `mailpit` |
+| `SMTP_PORT` | Porta SMTP; o Mailpit utiliza `1025` |
+| `SMTP_FROM` | Remetente exibido nas mensagens |

@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { EnrollmentStatus } from "@prisma/client";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/database.js";
+import { emailService } from "../../src/shared/email/email.service.js";
 
 const workshopIds: string[] = [];
 let availableWorkshopId: string;
@@ -68,6 +69,7 @@ afterAll(async () => {
 describe("POST /api/inscricoes", () => {
   it("creates a pending enrollment with valid data", async () => {
     const email = `valid-${randomUUID()}@example.com`;
+    const emailSpy = vi.spyOn(emailService, "sendEnrollmentReceived");
 
     const response = await request(app).post("/api/inscricoes").send({
       name: "Maria Artesã",
@@ -90,6 +92,12 @@ describe("POST /api/inscricoes", () => {
     });
 
     expect(persistedEnrollment).not.toBeNull();
+    expect(emailSpy).toHaveBeenCalledWith(expect.objectContaining({
+      name: "Maria Artesã",
+      email,
+      workshop: expect.objectContaining({ title: expect.any(String) }),
+    }));
+    emailSpy.mockRestore();
   });
 
   it("rejects invalid data without persisting it", async () => {

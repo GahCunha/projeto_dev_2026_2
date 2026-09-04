@@ -1,5 +1,6 @@
 import { EnrollmentStatus, Prisma } from "@prisma/client";
 import { AppError } from "../../shared/errors/app-error.js";
+import { emailService } from "../../shared/email/email.service.js";
 import { workshopRepository } from "../workshops/workshop.repository.js";
 import { enrollmentRepository } from "./enrollment.repository.js";
 import type {
@@ -48,6 +49,18 @@ export const enrollmentService = {
       );
     }
 
+    const emailData = {
+      name: enrollment.name,
+      email: enrollment.email,
+      workshop: enrollment.workshop,
+    };
+
+    if (input.status === EnrollmentStatus.CONFIRMADA) {
+      await emailService.sendEnrollmentConfirmed(emailData);
+    } else {
+      await emailService.sendEnrollmentCanceled(emailData);
+    }
+
     return updatedEnrollment;
   },
 
@@ -83,7 +96,18 @@ export const enrollmentService = {
     }
 
     try {
-      return await enrollmentRepository.create(data);
+      const enrollment = await enrollmentRepository.create(data);
+      await emailService.sendEnrollmentReceived({
+        name: enrollment.name,
+        email: enrollment.email,
+        workshop: {
+          title: workshop.title,
+          startsAt: workshop.startsAt,
+          location: workshop.location,
+        },
+      });
+
+      return enrollment;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         throw new AppError(
