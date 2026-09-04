@@ -68,17 +68,45 @@ export const workshopRepository = {
         : {}),
     };
 
-    const [items, totalItems] = await prisma.$transaction([
-      prisma.workshop.findMany({
+    return prisma.$transaction(async (transaction) => {
+      const [items, totalItems] = await Promise.all([
+        transaction.workshop.findMany({
         where,
+        include: { _count: { select: { enrollments: true } } },
         orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),
-      prisma.workshop.count({ where }),
-    ]);
+        transaction.workshop.count({ where }),
+      ]);
 
-    return { items, totalItems };
+      const occupiedByWorkshop = items.length
+        ? await transaction.enrollment.groupBy({
+            by: ["workshopId"],
+            where: {
+              workshopId: { in: items.map((workshop) => workshop.id) },
+              status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
+            },
+            _count: { _all: true },
+          })
+        : [];
+
+      const occupiedSeatsMap = new Map(
+        occupiedByWorkshop.map((group) => [group.workshopId, group._count._all]),
+      );
+
+      const workshops = items.map(({ _count, ...workshop }) => {
+        const occupiedSeats = occupiedSeatsMap.get(workshop.id) ?? 0;
+        return {
+          ...workshop,
+          enrollmentCount: _count.enrollments,
+          occupiedSeats,
+          availableSeats: Math.max(workshop.capacity - occupiedSeats, 0),
+        };
+      });
+
+      return { items: workshops, totalItems };
+    });
   },
 
   findById(id: string) {

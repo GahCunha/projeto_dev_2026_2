@@ -71,13 +71,39 @@ export const openApiDocument = {
             minimum: 0,
             example: 8,
             description:
-              "Capacidade menos inscrições pendentes e confirmadas; calculada no momento da consulta pública.",
+              "Capacidade menos inscrições pendentes e confirmadas; calculada no momento da consulta.",
           },
           location: { type: "string", example: "Ateliê Madeira, sala 1" },
           active: { type: "boolean", example: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
+      },
+      AdminWorkshop: {
+        allOf: [
+          { $ref: "#/components/schemas/Workshop" },
+          {
+            type: "object",
+            required: ["enrollmentCount", "occupiedSeats", "availableSeats"],
+            properties: {
+              enrollmentCount: {
+                type: "integer",
+                minimum: 0,
+                description: "Quantidade total de inscrições, inclusive canceladas.",
+              },
+              occupiedSeats: {
+                type: "integer",
+                minimum: 0,
+                description: "Inscrições pendentes e confirmadas que reservam vaga.",
+              },
+              availableSeats: {
+                type: "integer",
+                minimum: 0,
+                description: "Capacidade restante após descontar as vagas ocupadas.",
+              },
+            },
+          },
+        ],
       },
       Enrollment: {
         type: "object",
@@ -458,13 +484,18 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Lista inscrições para gestão",
         description:
-          "Retorna inscrições paginadas e ordenadas pela data da oficina. Permite busca case-insensitive por nome ou e-mail e filtro por status.",
+          "Retorna inscrições paginadas e ordenadas pela data da oficina. Permite busca case-insensitive por nome ou e-mail e filtros por status e oficina.",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "status",
             in: "query",
             schema: { type: "string", enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"] },
+          },
+          {
+            name: "workshopId",
+            in: "query",
+            schema: { type: "string", format: "uuid" },
           },
           {
             name: "search",
@@ -510,7 +541,7 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Lista oficinas para gestão",
         description:
-          "Retorna oficinas ativas e inativas, com busca por título ou local, filtro de atividade e paginação.",
+          "Retorna oficinas ativas e inativas com ocupação calculada, busca por título ou local, filtro de atividade e paginação.",
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: "active", in: "query", schema: { type: "boolean" } },
@@ -536,7 +567,7 @@ export const openApiDocument = {
                   properties: {
                     data: {
                       type: "array",
-                      items: { $ref: "#/components/schemas/Workshop" },
+                      items: { $ref: "#/components/schemas/AdminWorkshop" },
                     },
                     pagination: { $ref: "#/components/schemas/Pagination" },
                   },

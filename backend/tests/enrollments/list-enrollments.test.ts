@@ -156,6 +156,31 @@ describe("GET /api/admin/inscricoes", () => {
     );
   });
 
+  it("filters enrollments by workshop", async () => {
+    const agent = await authenticatedAgent();
+    const response = await agent
+      .get("/api/admin/inscricoes")
+      .query({ workshopId: firstWorkshopId });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+    expect(
+      response.body.data.every(
+        (item: { workshopId: string }) => item.workshopId === firstWorkshopId,
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects an invalid workshop identifier", async () => {
+    const agent = await authenticatedAgent();
+    const response = await agent
+      .get("/api/admin/inscricoes")
+      .query({ workshopId: "invalid-id" });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toBe("INVALID_DATA");
+  });
+
   it("rejects pagination above the allowed limit", async () => {
     const agent = await authenticatedAgent();
     const response = await agent.get("/api/admin/inscricoes").query({ pageSize: 51 });

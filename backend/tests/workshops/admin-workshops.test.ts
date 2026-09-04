@@ -66,6 +66,12 @@ beforeAll(async () => {
         status: "CONFIRMADA",
         workshopId: managedWorkshopId,
       },
+      {
+        name: "Pessoa Cancelada",
+        email: `canceled-${marker}@example.com`,
+        status: "CANCELADA",
+        workshopId: managedWorkshopId,
+      },
     ],
   });
 });
@@ -156,6 +162,13 @@ describe("administrative workshops", () => {
     expect(response.body.data.some((workshop: { active: boolean }) => workshop.active)).toBe(true);
     expect(response.body.data.some((workshop: { active: boolean }) => !workshop.active)).toBe(true);
     expect(response.body.pagination.totalItems).toBe(3);
+    expect(
+      response.body.data.find((workshop: { id: string }) => workshop.id === managedWorkshopId),
+    ).toMatchObject({
+      enrollmentCount: 3,
+      occupiedSeats: 2,
+      availableSeats: 10,
+    });
   });
 
   it("filters inactive workshops", async () => {

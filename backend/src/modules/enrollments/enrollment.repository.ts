@@ -49,6 +49,7 @@ export const enrollmentRepository = {
   async list(query: ListEnrollmentsQuery) {
     const where: Prisma.EnrollmentWhereInput = {
       status: query.status,
+      workshopId: query.workshopId,
       OR: query.search
         ? [
             { name: { contains: query.search, mode: "insensitive" } },
