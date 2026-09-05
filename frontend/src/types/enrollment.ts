@@ -1,7 +1,7 @@
 export type CreateEnrollmentInput = {
   name: string
   email: string
-  workshopId: string
+  classId: string
 }
 
 export type Enrollment = {
@@ -10,6 +10,7 @@ export type Enrollment = {
   email: string
   status: 'PENDENTE' | 'CONFIRMADA' | 'CANCELADA'
   workshopId: string
+  classId: string
   createdAt: string
   updatedAt: string
 }

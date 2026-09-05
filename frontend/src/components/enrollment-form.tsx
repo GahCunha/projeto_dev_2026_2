@@ -4,13 +4,13 @@ import { Button } from './ui/button'
 import { Eyebrow } from './ui/eyebrow'
 
 type EnrollmentFormProps = {
-  workshopId: string
+  classId: string
   hasAvailableSeats: boolean
   onCreated: () => void
 }
 
 export function EnrollmentForm({
-  workshopId,
+  classId,
   hasAvailableSeats,
   onCreated,
 }: EnrollmentFormProps) {
@@ -39,7 +39,7 @@ export function EnrollmentForm({
       await createEnrollment({
         name: normalizedName,
         email: normalizedEmail,
-        workshopId,
+        classId,
       })
       setName('')
       setEmail('')
@@ -69,10 +69,10 @@ export function EnrollmentForm({
       </div>
 
       <div className="grid gap-2">
-        <label className="font-mono text-xs uppercase tracking-widest" htmlFor={`name-${workshopId}`}>Nome completo</label>
+        <label className="font-mono text-xs uppercase tracking-widest" htmlFor={`name-${classId}`}>Nome completo</label>
         <input
           className="min-h-12 w-full rounded-none border-0 border-b-2 border-rule bg-white px-3.5 py-3 text-ink focus:border-blue"
-          id={`name-${workshopId}`}
+          id={`name-${classId}`}
           name="name"
           type="text"
           minLength={3}
@@ -85,10 +85,10 @@ export function EnrollmentForm({
       </div>
 
       <div className="grid gap-2">
-        <label className="font-mono text-xs uppercase tracking-widest" htmlFor={`email-${workshopId}`}>E-mail</label>
+        <label className="font-mono text-xs uppercase tracking-widest" htmlFor={`email-${classId}`}>E-mail</label>
         <input
           className="min-h-12 w-full rounded-none border-0 border-b-2 border-rule bg-white px-3.5 py-3 text-ink focus:border-blue"
-          id={`email-${workshopId}`}
+          id={`email-${classId}`}
           name="email"
           type="email"
           spellCheck={false}

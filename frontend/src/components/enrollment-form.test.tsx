@@ -13,7 +13,7 @@ describe('EnrollmentForm', () => {
 
   it('validates the participant name before calling the API', async () => {
     const user = userEvent.setup()
-    render(<EnrollmentForm workshopId="workshop-id" hasAvailableSeats onCreated={vi.fn()} />)
+    render(<EnrollmentForm classId="class-id" hasAvailableSeats onCreated={vi.fn()} />)
 
     await user.type(screen.getByLabelText('Nome completo'), 'Al')
     await user.type(screen.getByLabelText('E-mail'), 'al@example.com')
@@ -32,12 +32,13 @@ describe('EnrollmentForm', () => {
         name: 'Maria Artesã',
         email: 'maria@example.com',
         workshopId: 'workshop-id',
+        classId: 'class-id',
         status: 'PENDENTE',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
     })
-    render(<EnrollmentForm workshopId="workshop-id" hasAvailableSeats onCreated={onCreated} />)
+    render(<EnrollmentForm classId="class-id" hasAvailableSeats onCreated={onCreated} />)
 
     await user.type(screen.getByLabelText('Nome completo'), '  Maria Artesã  ')
     await user.type(screen.getByLabelText('E-mail'), '  maria@example.com  ')
@@ -46,14 +47,14 @@ describe('EnrollmentForm', () => {
     expect(createEnrollmentMock).toHaveBeenCalledWith({
       name: 'Maria Artesã',
       email: 'maria@example.com',
-      workshopId: 'workshop-id',
+      classId: 'class-id',
     })
     expect(await screen.findByRole('status')).toHaveTextContent('Inscrição recebida')
     expect(onCreated).toHaveBeenCalledOnce()
   })
 
   it('does not render a form when there are no seats', () => {
-    render(<EnrollmentForm workshopId="workshop-id" hasAvailableSeats={false} onCreated={vi.fn()} />)
+    render(<EnrollmentForm classId="class-id" hasAvailableSeats={false} onCreated={vi.fn()} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('sem vagas disponíveis')
     expect(screen.queryByRole('button', { name: 'Quero participar' })).not.toBeInTheDocument()

@@ -50,7 +50,7 @@ export function PublicHomePage() {
       <main id="conteudo">
         <HeroSection workshops={workshops} />
         <WorkshopsSection workshops={workshops} selectedCategory={selectedCategory} isLoading={isLoading} error={error} onCategoryChange={setSelectedCategory} onWorkshopSelect={selectWorkshop} onRetry={retry} />
-        {selectedWorkshop && <WorkshopDetailsSection workshop={selectedWorkshop} onClose={() => setSelectedWorkshopId(null)} onEnrollmentCreated={() => setRequestKey((currentKey) => currentKey + 1)} />}
+        {selectedWorkshop && <WorkshopDetailsSection key={selectedWorkshop.id} workshop={selectedWorkshop} onClose={() => setSelectedWorkshopId(null)} onEnrollmentCreated={() => setRequestKey((currentKey) => currentKey + 1)} />}
         <ProcessSection />
       </main>
       <SiteFooter />
