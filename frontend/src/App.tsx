@@ -9,12 +9,14 @@ import { AdminLoginPage } from './pages/admin-login-page'
 import { AdminWorkshopsPage } from './pages/admin-workshops-page'
 import { PublicHomePage } from './pages/public-home-page'
 import { EnrollmentCancellationPage } from './pages/enrollment-cancellation-page'
+import { EnrollmentPaymentPage } from './pages/enrollment-payment-page'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<PublicHomePage />} />
       <Route path="/inscricoes/cancelar/:token" element={<EnrollmentCancellationPage />} />
+      <Route path="/inscricoes/pagamento/:token" element={<EnrollmentPaymentPage />} />
       <Route element={<AdminAuthBoundary />}>
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route element={<ProtectedRoute />}>

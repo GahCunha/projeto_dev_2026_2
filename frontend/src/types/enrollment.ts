@@ -9,6 +9,7 @@ export type Enrollment = {
   name: string
   email: string
   status: 'PENDENTE' | 'CONFIRMADA' | 'CANCELADA'
+  paymentStatus: 'ISENTO' | 'PENDENTE' | 'PAGO'
   workshopId: string
   classId: string
   createdAt: string
@@ -20,8 +21,10 @@ export type EnrollmentResponse = {
 }
 
 export type EnrollmentStatus = Enrollment['status']
+export type PaymentStatus = Enrollment['paymentStatus']
 
 export type AdminEnrollment = Enrollment & {
+  paidAt: string | null
   workshop: {
     id: string
     title: string

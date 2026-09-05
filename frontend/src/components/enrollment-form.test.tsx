@@ -34,6 +34,7 @@ describe('EnrollmentForm', () => {
         workshopId: 'workshop-id',
         classId: 'class-id',
         status: 'PENDENTE',
+        paymentStatus: 'PENDENTE',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -50,6 +51,7 @@ describe('EnrollmentForm', () => {
       classId: 'class-id',
     })
     expect(await screen.findByRole('status')).toHaveTextContent('Inscrição recebida')
+    expect(screen.getByRole('status')).toHaveTextContent('link para simular o pagamento PIX')
     expect(onCreated).toHaveBeenCalledOnce()
   })
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { createEnrollment } from '../services/enrollment-service'
+import type { PaymentStatus } from '../types/enrollment'
 import { Button } from './ui/button'
 import { Eyebrow } from './ui/eyebrow'
 
@@ -18,7 +19,7 @@ export function EnrollmentForm({
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,17 +34,17 @@ export function EnrollmentForm({
 
     setIsSubmitting(true)
     setError(null)
-    setSuccess(false)
+    setPaymentStatus(undefined)
 
     try {
-      await createEnrollment({
+      const response = await createEnrollment({
         name: normalizedName,
         email: normalizedEmail,
         classId,
       })
       setName('')
       setEmail('')
-      setSuccess(true)
+      setPaymentStatus(response.data.paymentStatus)
       onCreated()
     } catch (requestError) {
       setError(
@@ -105,9 +106,11 @@ export function EnrollmentForm({
       </Button>
 
       {error && <p className="m-0 border-l-3 border-current bg-deep px-4 py-3 text-danger" role="alert" aria-live="polite">{error}</p>}
-      {success && (
+      {paymentStatus && (
         <p className="m-0 border-l-3 border-current bg-deep px-4 py-3 text-success" role="status" aria-live="polite">
-          Inscrição recebida. Agora ela será analisada pela equipe.
+          {paymentStatus === 'PENDENTE'
+            ? 'Inscrição recebida. Enviamos por e-mail o link para simular o pagamento PIX.'
+            : 'Inscrição recebida. Agora ela será analisada pela equipe.'}
         </p>
       )}
     </form>

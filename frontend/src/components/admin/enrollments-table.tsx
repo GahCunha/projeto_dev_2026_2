@@ -1,5 +1,6 @@
 import type { AdminEnrollment, EnrollmentStatus } from '../../types/enrollment'
 import { EnrollmentStatusBadge } from './enrollment-status-badge'
+import { PaymentStatusBadge } from './payment-status-badge'
 
 type NextEnrollmentStatus = Extract<EnrollmentStatus, 'CONFIRMADA' | 'CANCELADA'>
 
@@ -38,6 +39,10 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
                 {enrollment.class && <dd className="mt-1 text-sm text-muted">{enrollment.class.name}</dd>}
               </div>
               <div>
+                <dt className="font-mono text-xs uppercase tracking-wider text-muted">Pagamento</dt>
+                <dd className="mt-1"><PaymentStatusBadge status={enrollment.paymentStatus} /></dd>
+              </div>
+              <div>
                 <dt className="font-mono text-xs uppercase tracking-wider text-muted">Próxima aula</dt>
                 <dd className="mt-1 text-sm text-muted">{formatNextMeeting(enrollment)}</dd>
               </div>
@@ -56,6 +61,7 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
               <th className="px-5 py-3 font-normal">Oficina</th>
               <th className="px-5 py-3 font-normal">Próxima aula</th>
               <th className="px-5 py-3 font-normal">Status</th>
+              <th className="px-5 py-3 font-normal">Pagamento</th>
               <th className="px-5 py-3 text-right font-normal">Ações</th>
             </tr>
           </thead>
@@ -76,6 +82,7 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
                   {formatNextMeeting(enrollment)}
                 </td>
                 <td className="px-5 py-4 align-middle"><EnrollmentStatusBadge status={enrollment.status} /></td>
+                <td className="px-5 py-4 align-middle"><PaymentStatusBadge status={enrollment.paymentStatus} /></td>
                 <td className="px-5 py-4 align-middle">
                   <EnrollmentActions enrollment={enrollment} disabled={updatingEnrollmentId === enrollment.id} onStatusChange={onStatusChange} className="justify-end" />
                 </td>
