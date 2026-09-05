@@ -41,7 +41,6 @@ export function PublicHomePage() {
 
   function selectWorkshop(workshopId: string) {
     setSelectedWorkshopId(workshopId)
-    window.setTimeout(() => document.querySelector('#detalhes')?.scrollIntoView({ behavior: 'smooth' }), 0)
   }
 
   return (
@@ -50,10 +49,10 @@ export function PublicHomePage() {
       <main id="conteudo">
         <HeroSection workshops={workshops} />
         <WorkshopsSection workshops={workshops} selectedCategory={selectedCategory} isLoading={isLoading} error={error} onCategoryChange={setSelectedCategory} onWorkshopSelect={selectWorkshop} onRetry={retry} />
-        {selectedWorkshop && <WorkshopDetailsSection key={selectedWorkshop.id} workshop={selectedWorkshop} onClose={() => setSelectedWorkshopId(null)} onEnrollmentCreated={() => setRequestKey((currentKey) => currentKey + 1)} />}
         <ProcessSection />
       </main>
       <SiteFooter />
+      {selectedWorkshop && <WorkshopDetailsSection key={selectedWorkshop.id} workshop={selectedWorkshop} onClose={() => setSelectedWorkshopId(null)} onEnrollmentCreated={() => setRequestKey((currentKey) => currentKey + 1)} />}
     </>
   )
 }

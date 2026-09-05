@@ -19,6 +19,20 @@ function formatDate(date: string) {
   }).format(new Date(date))
 }
 
+const priceFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 2,
+})
+
+function formatPrice(minimumPrice: number | null, maximumPrice: number | null) {
+  if (minimumPrice === null || maximumPrice === null) return 'Consulte as turmas'
+  if (maximumPrice === 0) return 'Grátis'
+  if (minimumPrice === 0) return 'Grátis ou paga'
+  if (minimumPrice === maximumPrice) return priceFormatter.format(minimumPrice)
+  return `A partir de ${priceFormatter.format(minimumPrice)}`
+}
+
 export function WorkshopCard({ workshop, onSelect }: WorkshopCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
   const isSoldOut = workshop.availableSeats === 0
@@ -44,14 +58,18 @@ export function WorkshopCard({ workshop, onSelect }: WorkshopCardProps) {
 
       <div className="p-5">
         <h3 className="mb-5 min-h-12 font-display text-2xl leading-tight text-carbon">{workshop.title}</h3>
-        <dl className="m-0 grid grid-cols-3 gap-4">
-          <div className="col-span-2">
+        <dl className="m-0 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="sm:col-span-2">
             <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Quando</dt>
             <dd className="m-0">{workshop.nextMeetingAt ? formatDate(workshop.nextMeetingAt) : 'Consulte as turmas'}</dd>
           </div>
           <div>
             <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Turmas</dt>
             <dd className="m-0">{workshop.classCount}</dd>
+          </div>
+          <div>
+            <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Valor</dt>
+            <dd className="m-0 font-bold tabular-nums text-carbon">{formatPrice(workshop.minimumPrice, workshop.maximumPrice)}</dd>
           </div>
         </dl>
 

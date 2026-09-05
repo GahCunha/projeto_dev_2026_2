@@ -41,6 +41,8 @@ export const openApiDocument = {
           "totalCapacity",
           "occupiedSeats",
           "availableSeats",
+          "minimumPrice",
+          "maximumPrice",
           "active",
           "createdAt",
           "updatedAt",
@@ -76,6 +78,8 @@ export const openApiDocument = {
             description:
               "Capacidade menos inscrições pendentes e confirmadas; calculada no momento da consulta.",
           },
+          minimumPrice: { type: "number", minimum: 0, nullable: true, example: 85.5 },
+          maximumPrice: { type: "number", minimum: 0, nullable: true, example: 120 },
           active: { type: "boolean", example: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },

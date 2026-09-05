@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { pagePadding } from '../../lib/styles'
+import { useEffect, useRef, useState } from 'react'
 import { getWorkshopClasses } from '../../services/class-service'
 import type { WorkshopClass } from '../../types/workshop-class'
 import type { Workshop } from '../../types/workshop'
@@ -15,12 +14,23 @@ type WorkshopDetailsSectionProps = {
 }
 
 export function WorkshopDetailsSection({ workshop, onClose, onEnrollmentCreated }: WorkshopDetailsSectionProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const [classes, setClasses] = useState<WorkshopClass[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
   const selectedClass = classes.find((item) => item.id === selectedClassId) ?? null
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    dialog.showModal()
+    return () => {
+      if (dialog.open) dialog.close()
+    }
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -57,24 +67,47 @@ export function WorkshopDetailsSection({ workshop, onClose, onEnrollmentCreated 
     setRequestKey((current) => current + 1)
   }
 
-  return (
-    <section className={`grid scroll-mt-18 grid-cols-1 gap-10 border-t border-rule py-12 lg:grid-cols-5 lg:gap-20 lg:py-20 ${pagePadding}`} id="detalhes" aria-labelledby="selected-workshop-title">
-      <div className="lg:col-span-3">
-        <Button className="mb-8" variant="ghost" onClick={onClose}>← Voltar para oficinas</Button>
+  function closeDialog() {
+    dialogRef.current?.close()
+  }
 
-        <div className="relative mb-10 h-80 border border-carbon bg-light p-2 shadow-offset sm:h-96 md:h-116">
+  function handleBackdropClick(event: React.MouseEvent<HTMLDialogElement>) {
+    if (event.target === event.currentTarget) closeDialog()
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="m-auto h-dvh max-h-dvh w-full max-w-none overflow-y-auto bg-paper p-0 text-ink shadow-craft backdrop:bg-carbon/70 sm:h-auto sm:max-h-screen sm:w-11/12 sm:max-w-6xl"
+      aria-labelledby="selected-workshop-title"
+      onCancel={(event) => {
+        event.preventDefault()
+        closeDialog()
+      }}
+      onClose={onClose}
+      onClick={handleBackdropClick}
+    >
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-rule bg-light px-4 py-3 sm:px-6">
+        <p className="m-0 truncate font-mono text-xs uppercase tracking-widest text-muted">Detalhes da oficina</p>
+        <Button variant="ghost" aria-label="Fechar detalhes da oficina" onClick={closeDialog}>Fechar <span aria-hidden="true">×</span></Button>
+      </div>
+
+      <section className="grid grid-cols-1 gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-10">
+      <div className="lg:col-span-3">
+
+        <div className="relative mb-8 h-64 border border-carbon bg-light p-2 shadow-offset sm:h-80">
           {workshop.imageUrl ? <img className="block h-full w-full object-cover" src={workshop.imageUrl} alt={`Oficina ${workshop.title}`} width="960" height="640" loading="lazy" /> : <ImageFallback />}
           <span className="absolute -top-3 left-1/2 h-6 w-24 -translate-x-1/2 rotate-1 bg-tape/90 shadow-sm" aria-hidden="true" />
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <span className="justify-self-start bg-green px-2.5 py-1.5 font-mono text-xs uppercase tracking-widest text-white">{workshop.category}</span>
-          <h2 className="my-3 mb-6 w-full font-display text-4xl leading-none -tracking-wider text-carbon md:text-6xl" id="selected-workshop-title">{workshop.title}</h2>
+          <h2 className="my-3 mb-4 w-full text-balance font-display text-4xl leading-none -tracking-wider text-carbon md:text-5xl" id="selected-workshop-title">{workshop.title}</h2>
         </div>
 
-        <p className="my-8 text-lg leading-relaxed text-muted">{workshop.description}</p>
+        <p className="my-6 text-pretty text-lg leading-relaxed text-muted">{workshop.description}</p>
 
-        <div className="my-10 border-y border-rule py-8">
+        <div className="my-8 border-y border-rule py-6">
           {isLoading && <div className="loading-surface animate-loading h-40 border border-rule" aria-label="Carregando turmas" />}
           {!isLoading && error && (
             <div className="grid gap-3 border-l-4 border-danger bg-deep p-4" role="alert">
@@ -90,7 +123,7 @@ export function WorkshopDetailsSection({ workshop, onClose, onEnrollmentCreated 
           )}
         </div>
 
-        <div className="relative mt-12 border border-rule bg-deep px-6 pt-8 pb-5">
+        <div className="relative mt-10 border border-rule bg-deep px-6 pt-8 pb-5">
           <span className="absolute -top-3 left-5 bg-paper px-2 py-1 font-mono text-xs uppercase tracking-widest text-blue">Lista de materiais</span>
           {workshop.materials.length > 0 ? (
             <ul className="m-0 grid list-none gap-3 p-0">
@@ -102,7 +135,7 @@ export function WorkshopDetailsSection({ workshop, onClose, onEnrollmentCreated 
         </div>
       </div>
 
-      <aside className="relative self-start shadow-craft lg:col-span-2 lg:mt-14">
+      <aside className="relative self-start shadow-craft lg:sticky lg:top-20 lg:col-span-2">
         {selectedClass ? (
           <EnrollmentForm key={selectedClass.id} classId={selectedClass.id} hasAvailableSeats={selectedClass.availableSeats > 0} onCreated={refreshClasses} />
         ) : (
@@ -112,6 +145,7 @@ export function WorkshopDetailsSection({ workshop, onClose, onEnrollmentCreated 
           </div>
         )}
       </aside>
-    </section>
+      </section>
+    </dialog>
   )
 }

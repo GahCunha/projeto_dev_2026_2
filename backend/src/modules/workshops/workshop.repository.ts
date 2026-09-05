@@ -22,6 +22,7 @@ function withoutLegacyFields(workshop: WorkshopWithClasses, includeEnrollmentCou
     0,
   );
   const totalCapacity = classes.reduce((total, workshopClass) => total + workshopClass.capacity, 0);
+  const prices = classes.map((workshopClass) => Number(workshopClass.price));
 
   return {
     ...data,
@@ -30,6 +31,8 @@ function withoutLegacyFields(workshop: WorkshopWithClasses, includeEnrollmentCou
     totalCapacity,
     occupiedSeats,
     availableSeats: Math.max(totalCapacity - occupiedSeats, 0),
+    minimumPrice: prices.length > 0 ? Math.min(...prices) : null,
+    maximumPrice: prices.length > 0 ? Math.max(...prices) : null,
     ...(includeEnrollmentCount
       ? { enrollmentCount: classes.reduce((total, workshopClass) => total + workshopClass.enrollments.length, 0) }
       : {}),

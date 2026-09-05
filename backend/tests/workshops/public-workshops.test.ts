@@ -29,6 +29,7 @@ beforeAll(async () => {
           create: {
             name: "Turma futura",
             capacity: 5,
+            price: 85.5,
             meetings: { create: { startsAt: dateFromNow(10), endsAt: dateFromNow(10.1), location: "Sala pública" } },
           },
         },
@@ -132,6 +133,8 @@ describe("public workshops", () => {
       totalCapacity: 5,
       classCount: 1,
       availableSeats: 3,
+      minimumPrice: 85.5,
+      maximumPrice: 85.5,
     });
     expect(workshop._count).toBeUndefined();
   });

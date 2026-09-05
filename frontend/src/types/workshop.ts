@@ -10,6 +10,8 @@ export type Workshop = {
   totalCapacity: number
   occupiedSeats: number
   availableSeats: number
+  minimumPrice: number | null
+  maximumPrice: number | null
   active: boolean
   createdAt: string
   updatedAt: string
