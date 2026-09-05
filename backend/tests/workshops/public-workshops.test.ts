@@ -10,6 +10,7 @@ const workshopIds: string[] = [];
 let availableWorkshopId: string;
 let pastWorkshopId: string;
 let inactiveWorkshopId: string;
+let availableClassId: string;
 
 function dateFromNow(days: number) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
@@ -28,7 +29,15 @@ beforeAll(async () => {
         durationMin: 120,
         capacity: 5,
         location: "Sala pública",
+        classes: {
+          create: {
+            name: "Turma futura",
+            capacity: 5,
+            meetings: { create: { startsAt: dateFromNow(10), endsAt: dateFromNow(10.1), location: "Sala pública" } },
+          },
+        },
       },
+      include: { classes: true },
     }),
     prisma.workshop.create({
       data: {
@@ -39,7 +48,15 @@ beforeAll(async () => {
         durationMin: 120,
         capacity: 5,
         location: "Sala antiga",
+        classes: {
+          create: {
+            name: "Turma encerrada",
+            capacity: 5,
+            meetings: { create: { startsAt: dateFromNow(-10), endsAt: dateFromNow(-9.9), location: "Sala antiga" } },
+          },
+        },
       },
+      include: { classes: true },
     }),
     prisma.workshop.create({
       data: {
@@ -51,13 +68,22 @@ beforeAll(async () => {
         capacity: 5,
         location: "Sala inativa",
         active: false,
+        classes: {
+          create: {
+            name: "Turma inativa",
+            capacity: 5,
+            meetings: { create: { startsAt: dateFromNow(20), endsAt: dateFromNow(20.1), location: "Sala inativa" } },
+          },
+        },
       },
+      include: { classes: true },
     }),
   ]);
 
   availableWorkshopId = availableWorkshop.id;
   pastWorkshopId = pastWorkshop.id;
   inactiveWorkshopId = inactiveWorkshop.id;
+  availableClassId = availableWorkshop.classes[0]!.id;
   workshopIds.push(availableWorkshopId, pastWorkshopId, inactiveWorkshopId);
 
   await prisma.enrollment.createMany({
@@ -66,18 +92,21 @@ beforeAll(async () => {
         name: "Pessoa Pendente",
         email: `pending-${marker}@example.com`,
         workshopId: availableWorkshopId,
+        classId: availableClassId,
       },
       {
         name: "Pessoa Confirmada",
         email: `confirmed-${marker}@example.com`,
         status: EnrollmentStatus.CONFIRMADA,
         workshopId: availableWorkshopId,
+        classId: availableClassId,
       },
       {
         name: "Pessoa Cancelada",
         email: `canceled-${marker}@example.com`,
         status: EnrollmentStatus.CANCELADA,
         workshopId: availableWorkshopId,
+        classId: availableClassId,
       },
     ],
   });
@@ -99,8 +128,8 @@ describe("public workshops", () => {
     expect(ids).not.toContain(pastWorkshopId);
     expect(ids).not.toContain(inactiveWorkshopId);
 
-    const dates = response.body.data.map((workshop: { startsAt: string }) =>
-      new Date(workshop.startsAt).getTime(),
+    const dates = response.body.data.map((workshop: { nextMeetingAt: string }) =>
+      new Date(workshop.nextMeetingAt).getTime(),
     );
     expect(dates).toEqual([...dates].sort((first, second) => first - second));
   });
@@ -115,7 +144,8 @@ describe("public workshops", () => {
       category: "Bordado",
       imageUrl: "https://example.com/bordado.jpg",
       materials: ["Bastidor", "Agulha", "Linha"],
-      capacity: 5,
+      totalCapacity: 5,
+      classCount: 1,
       availableSeats: 3,
     });
     expect(workshop._count).toBeUndefined();
@@ -126,6 +156,8 @@ describe("public workshops", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.availableSeats).toBe(3);
+    expect(response.body.data).not.toHaveProperty("startsAt");
+    expect(response.body.data).not.toHaveProperty("capacity");
   });
 
   it("does not expose a past workshop by id", async () => {

@@ -11,6 +11,7 @@ const adminPassword = "SenhaSegura@123";
 const workshopIds: string[] = [];
 let adminId: string;
 let managedWorkshopId: string;
+let managedClassId: string;
 
 function futureDate(days: number) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
@@ -34,7 +35,15 @@ beforeAll(async () => {
         durationMin: 120,
         capacity: 12,
         location: `Ateliê Norte ${marker}`,
+        classes: {
+          create: {
+            name: "Turma inicial",
+            capacity: 12,
+            meetings: { create: { startsAt: futureDate(10), endsAt: futureDate(10.1), location: `Ateliê Norte ${marker}` } },
+          },
+        },
       },
+      include: { classes: true },
     }),
     prisma.workshop.create({
       data: {
@@ -45,13 +54,22 @@ beforeAll(async () => {
         capacity: 8,
         location: `Ateliê Sul ${marker}`,
         active: false,
+        classes: {
+          create: {
+            name: "Turma inicial",
+            capacity: 8,
+            meetings: { create: { startsAt: futureDate(20), endsAt: futureDate(20.1), location: `Ateliê Sul ${marker}` } },
+          },
+        },
       },
+      include: { classes: true },
     }),
   ]);
 
   adminId = admin.id;
   workshopIds.push(...workshops.map((workshop) => workshop.id));
   managedWorkshopId = workshops[0].id;
+  managedClassId = workshops[0].classes[0]!.id;
 
   await prisma.enrollment.createMany({
     data: [
@@ -59,18 +77,21 @@ beforeAll(async () => {
         name: "Pessoa Pendente",
         email: `pending-${marker}@example.com`,
         workshopId: managedWorkshopId,
+        classId: managedClassId,
       },
       {
         name: "Pessoa Confirmada",
         email: `confirmed-${marker}@example.com`,
         status: "CONFIRMADA",
         workshopId: managedWorkshopId,
+        classId: managedClassId,
       },
       {
         name: "Pessoa Cancelada",
         email: `canceled-${marker}@example.com`,
         status: "CANCELADA",
         workshopId: managedWorkshopId,
+        classId: managedClassId,
       },
     ],
   });
@@ -113,10 +134,6 @@ describe("administrative workshops", () => {
       description: "Introdução segura às principais ferramentas de carpintaria.",
       imageUrl: "https://example.com/carpintaria.jpg",
       materials: ["Avental", "Óculos de proteção"],
-      startsAt: futureDate(30).toISOString(),
-      durationMin: 180,
-      capacity: 15,
-      location: "Oficina central",
     });
 
     expect(response.status).toBe(201);
@@ -125,7 +142,8 @@ describe("administrative workshops", () => {
       category: "Carpintaria",
       imageUrl: "https://example.com/carpintaria.jpg",
       materials: ["Avental", "Óculos de proteção"],
-      capacity: 15,
+      classCount: 0,
+      totalCapacity: 0,
       active: true,
     });
 
@@ -134,7 +152,7 @@ describe("administrative workshops", () => {
     expect(workshop).not.toBeNull();
   });
 
-  it("rejects a workshop with a past date", async () => {
+  it("rejects scheduling fields because they belong to a class", async () => {
     const agent = await authenticatedAgent();
     const response = await agent.post("/api/admin/oficinas").send({
       title: "Oficina no passado",
@@ -148,7 +166,6 @@ describe("administrative workshops", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error).toBe("INVALID_DATA");
-    expect(response.body.fields.startsAt).toBeDefined();
   });
 
   it("lists both active and inactive workshops", async () => {
@@ -200,7 +217,7 @@ describe("administrative workshops", () => {
 
   it("blocks workshop updates without authentication", async () => {
     const [updateResponse, statusResponse] = await Promise.all([
-      request(app).patch(`/api/admin/oficinas/${managedWorkshopId}`).send({ capacity: 10 }),
+      request(app).patch(`/api/admin/oficinas/${managedWorkshopId}`).send({ title: "Sem acesso" }),
       request(app)
         .patch(`/api/admin/oficinas/${managedWorkshopId}/status`)
         .send({ active: false }),
@@ -214,28 +231,26 @@ describe("administrative workshops", () => {
     const agent = await authenticatedAgent();
     const response = await agent.patch(`/api/admin/oficinas/${managedWorkshopId}`).send({
       title: `Cerâmica avançada ${marker}`,
-      capacity: 2,
     });
 
     expect(response.status).toBe(200);
     expect(response.body.data).toMatchObject({
       id: managedWorkshopId,
       title: `Cerâmica avançada ${marker}`,
-      capacity: 2,
     });
 
     const workshop = await prisma.workshop.findUnique({ where: { id: managedWorkshopId } });
-    expect(workshop?.capacity).toBe(2);
+    expect(workshop?.title).toBe(`Cerâmica avançada ${marker}`);
   });
 
-  it("rejects capacity below occupied seats", async () => {
+  it("rejects capacity changes because capacity belongs to a class", async () => {
     const agent = await authenticatedAgent();
     const response = await agent
       .patch(`/api/admin/oficinas/${managedWorkshopId}`)
       .send({ capacity: 1 });
 
-    expect(response.status).toBe(409);
-    expect(response.body.error).toBe("CAPACITY_BELOW_OCCUPANCY");
+    expect(response.status).toBe(422);
+    expect(response.body.error).toBe("INVALID_DATA");
   });
 
   it("rejects an empty update", async () => {

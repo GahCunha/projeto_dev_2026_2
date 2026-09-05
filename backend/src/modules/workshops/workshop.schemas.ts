@@ -11,12 +11,6 @@ export const createWorkshopSchema = z
     description: z.string().trim().min(10).max(1000),
     imageUrl: z.string().trim().url().max(2048).nullable().optional(),
     materials: z.array(z.string().trim().min(2).max(120)).max(20).optional(),
-    startsAt: z.coerce.date().refine((date) => date > new Date(), {
-      message: "A data da oficina deve estar no futuro",
-    }),
-    durationMin: z.coerce.number().int().min(30).max(1440),
-    capacity: z.coerce.number().int().min(1).max(500),
-    location: z.string().trim().min(3).max(160),
   })
   .strict();
 

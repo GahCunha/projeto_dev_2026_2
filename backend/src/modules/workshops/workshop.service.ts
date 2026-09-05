@@ -1,5 +1,4 @@
 import { AppError } from "../../shared/errors/app-error.js";
-import { enrollmentRepository } from "../enrollments/enrollment.repository.js";
 import { workshopRepository } from "./workshop.repository.js";
 import type {
   CreateWorkshopInput,
@@ -45,18 +44,6 @@ export const workshopService = {
 
     if (!workshop) {
       throw new AppError("Oficina não encontrada.", 404, "WORKSHOP_NOT_FOUND");
-    }
-
-    if (data.capacity !== undefined && data.capacity < workshop.capacity) {
-      const occupiedSeats = await enrollmentRepository.countActiveByWorkshop(id);
-
-      if (data.capacity < occupiedSeats) {
-        throw new AppError(
-          `A capacidade não pode ser menor que as ${occupiedSeats} vagas atualmente ocupadas.`,
-          409,
-          "CAPACITY_BELOW_OCCUPANCY",
-        );
-      }
     }
 
     return workshopRepository.update(id, data);
