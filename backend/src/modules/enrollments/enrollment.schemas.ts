@@ -34,3 +34,7 @@ export const updateEnrollmentStatusSchema = z
   .strict();
 
 export type UpdateEnrollmentStatusInput = z.infer<typeof updateEnrollmentStatusSchema>;
+
+export const cancellationTokenParamsSchema = z.object({
+  token: z.string().regex(/^[a-f0-9]{64}$/, "Token de cancelamento inválido"),
+});

@@ -16,11 +16,21 @@ export const enrollmentRepository = {
     });
   },
 
-  create(data: CreateEnrollmentInput) {
+  create(data: CreateEnrollmentInput, cancellationTokenHash: string) {
     return prisma.enrollment.create({
       data: {
         ...data,
         status: EnrollmentStatus.PENDENTE,
+        cancellationTokenHash,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        workshopId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   },
@@ -28,12 +38,44 @@ export const enrollmentRepository = {
   findById(id: string) {
     return prisma.enrollment.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        workshopId: true,
         workshop: {
           select: { title: true, startsAt: true, location: true },
         },
       },
     });
+  },
+
+  findByCancellationTokenHash(cancellationTokenHash: string) {
+    return prisma.enrollment.findUnique({
+      where: { cancellationTokenHash },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        workshop: {
+          select: { title: true, startsAt: true, location: true },
+        },
+      },
+    });
+  },
+
+  async cancelByCancellationTokenHash(cancellationTokenHash: string) {
+    const result = await prisma.enrollment.updateMany({
+      where: {
+        cancellationTokenHash,
+        status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
+      },
+      data: { status: EnrollmentStatus.CANCELADA },
+    });
+
+    if (result.count === 0) return null;
+    return this.findByCancellationTokenHash(cancellationTokenHash);
   },
 
   async updateStatus(
@@ -50,7 +92,18 @@ export const enrollmentRepository = {
       return null;
     }
 
-    return prisma.enrollment.findUnique({ where: { id } });
+    return prisma.enrollment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        workshopId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   },
 
   async list(query: ListEnrollmentsQuery) {
@@ -68,7 +121,14 @@ export const enrollmentRepository = {
     const [items, totalItems] = await prisma.$transaction([
       prisma.enrollment.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          workshopId: true,
+          createdAt: true,
+          updatedAt: true,
           workshop: {
             select: {
               id: true,

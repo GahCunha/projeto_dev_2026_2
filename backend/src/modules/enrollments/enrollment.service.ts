@@ -1,4 +1,6 @@
+import { createHash, randomBytes } from "node:crypto";
 import { EnrollmentStatus, Prisma } from "@prisma/client";
+import { env } from "../../config/environment.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { emailService } from "../../shared/email/email.service.js";
 import { workshopRepository } from "../workshops/workshop.repository.js";
@@ -15,7 +17,61 @@ const allowedTransitions: Record<EnrollmentStatus, EnrollmentStatus[]> = {
   CANCELADA: [],
 };
 
+function hashCancellationToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function cancellationUrl(token: string) {
+  return `${env.FRONTEND_URL.replace(/\/$/, "")}/inscricoes/cancelar/${token}`;
+}
+
 export const enrollmentService = {
+  async getCancellation(token: string) {
+    const enrollment = await enrollmentRepository.findByCancellationTokenHash(
+      hashCancellationToken(token),
+    );
+
+    if (!enrollment) {
+      throw new AppError("Link de cancelamento inválido ou expirado.", 404, "CANCELLATION_NOT_FOUND");
+    }
+
+    return enrollment;
+  },
+
+  async cancelWithToken(token: string) {
+    const tokenHash = hashCancellationToken(token);
+    const enrollment = await enrollmentRepository.findByCancellationTokenHash(tokenHash);
+
+    if (!enrollment) {
+      throw new AppError("Link de cancelamento inválido ou expirado.", 404, "CANCELLATION_NOT_FOUND");
+    }
+
+    if (enrollment.status === EnrollmentStatus.CANCELADA) {
+      throw new AppError("Esta inscrição já foi cancelada.", 409, "ENROLLMENT_ALREADY_CANCELED");
+    }
+
+    const canceledEnrollment = await enrollmentRepository.cancelByCancellationTokenHash(tokenHash);
+
+    if (!canceledEnrollment) {
+      throw new AppError(
+        "A inscrição foi alterada por outra operação. Atualize os dados e tente novamente.",
+        409,
+        "ENROLLMENT_CONFLICT",
+      );
+    }
+
+    const enrollmentWithEmail = await enrollmentRepository.findById(enrollment.id);
+    if (enrollmentWithEmail) {
+      await emailService.sendEnrollmentCanceled({
+        name: enrollmentWithEmail.name,
+        email: enrollmentWithEmail.email,
+        workshop: enrollmentWithEmail.workshop,
+      });
+    }
+
+    return canceledEnrollment;
+  },
+
   async updateStatus(id: string, input: UpdateEnrollmentStatusInput) {
     const enrollment = await enrollmentRepository.findById(id);
 
@@ -96,7 +152,11 @@ export const enrollmentService = {
     }
 
     try {
-      const enrollment = await enrollmentRepository.create(data);
+      const cancellationToken = randomBytes(32).toString("hex");
+      const enrollment = await enrollmentRepository.create(
+        data,
+        hashCancellationToken(cancellationToken),
+      );
       await emailService.sendEnrollmentReceived({
         name: enrollment.name,
         email: enrollment.email,
@@ -105,6 +165,7 @@ export const enrollmentService = {
           startsAt: workshop.startsAt,
           location: workshop.location,
         },
+        cancellationUrl: cancellationUrl(cancellationToken),
       });
 
       return enrollment;

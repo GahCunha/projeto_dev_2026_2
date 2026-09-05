@@ -143,6 +143,27 @@ export const openApiDocument = {
           },
         ],
       },
+      EnrollmentCancellation: {
+        type: "object",
+        required: ["id", "name", "status", "workshop"],
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string", example: "Maria Artesã" },
+          status: {
+            type: "string",
+            enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
+          },
+          workshop: {
+            type: "object",
+            required: ["title", "startsAt", "location"],
+            properties: {
+              title: { type: "string", example: "Crochê: primeiros pontos" },
+              startsAt: { type: "string", format: "date-time" },
+              location: { type: "string", example: "Ateliê Têxtil, sala 2" },
+            },
+          },
+        },
+      },
       Pagination: {
         type: "object",
         required: ["page", "pageSize", "totalItems", "totalPages"],
@@ -401,6 +422,78 @@ export const openApiDocument = {
           },
           "409": {
             description: "Inscrição duplicada ou oficina lotada",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/inscricoes/cancelamento/{token}": {
+      get: {
+        tags: ["Inscrições"],
+        summary: "Consulta uma inscrição pelo link de cancelamento",
+        parameters: [
+          {
+            name: "token",
+            in: "path",
+            required: true,
+            schema: { type: "string", pattern: "^[a-f0-9]{64}$" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Dados seguros da inscrição e da oficina",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/EnrollmentCancellation" } },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Link inválido ou desconhecido",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+      post: {
+        tags: ["Inscrições"],
+        summary: "Cancela a própria inscrição pelo link seguro",
+        parameters: [
+          {
+            name: "token",
+            in: "path",
+            required: true,
+            schema: { type: "string", pattern: "^[a-f0-9]{64}$" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Inscrição cancelada e vaga liberada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { data: { $ref: "#/components/schemas/EnrollmentCancellation" } },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Link inválido ou desconhecido",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+            },
+          },
+          "409": {
+            description: "Inscrição já cancelada ou alterada simultaneamente",
             content: {
               "application/json": { schema: { $ref: "#/components/schemas/Error" } },
             },

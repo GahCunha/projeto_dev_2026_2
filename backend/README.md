@@ -109,6 +109,8 @@ npm run dev
 | `GET` | `/api/oficinas` | Público | Lista oficinas ativas por data |
 | `GET` | `/api/oficinas/:id` | Público | Consulta uma oficina ativa |
 | `POST` | `/api/inscricoes` | Público | Cria uma inscrição pendente |
+| `GET` | `/api/inscricoes/cancelamento/:token` | Link privado | Consulta os dados para cancelamento |
+| `POST` | `/api/inscricoes/cancelamento/:token` | Link privado | Cancela a própria inscrição |
 | `POST` | `/api/admin/auth/login` | Público | Autentica o administrador |
 | `POST` | `/api/admin/auth/logout` | Administrador | Encerra a sessão |
 | `GET` | `/api/admin/auth/me` | Administrador | Retorna o usuário autenticado |
@@ -142,6 +144,8 @@ O status é alterado separadamente:
 Uma oficina desativada continua armazenada com suas inscrições, mas deixa de aparecer nas rotas públicas.
 
 A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina.
+
+Ao criar uma inscrição, a API gera um token aleatório e armazena somente seu hash. O token original aparece no link enviado por e-mail e permite ao visitante consultar e cancelar apenas a própria inscrição. O cancelamento libera a vaga imediatamente. O hash nunca é retornado nas respostas da API.
 
 As consultas públicas de oficinas retornam somente oficinas ativas e futuras. Cada oficina inclui `category`, `imageUrl`, `materials` e `availableSeats`. As vagas disponíveis não são armazenadas: a API subtrai da capacidade as inscrições pendentes e confirmadas em cada consulta.
 
@@ -232,3 +236,4 @@ Os filtros são opcionais. Para criar uma oficina, envie título, descrição, d
 | `SMTP_HOST` | Endereço do servidor SMTP; no Docker, `mailpit` |
 | `SMTP_PORT` | Porta SMTP; o Mailpit utiliza `1025` |
 | `SMTP_FROM` | Remetente exibido nas mensagens |
+| `FRONTEND_URL` | Origem usada para montar o link público de cancelamento |

@@ -9,6 +9,7 @@ type EnrollmentEmailData = {
     startsAt: Date;
     location: string;
   };
+  cancellationUrl?: string;
 };
 
 let transporter: Transporter | undefined;
@@ -49,12 +50,18 @@ function workshopDetails(data: EnrollmentEmailData) {
   ].join("\n");
 }
 
+function cancellationInstructions(data: EnrollmentEmailData) {
+  return data.cancellationUrl
+    ? `\n\nSe não puder participar, cancele sua inscrição por este link:\n${data.cancellationUrl}`
+    : "";
+}
+
 export const emailService = {
   sendEnrollmentReceived(data: EnrollmentEmailData) {
     return sendSafely(
       data.email,
       `Recebemos sua inscrição — ${data.workshop.title}`,
-      `Olá, ${data.name}!\n\nRecebemos sua inscrição e ela está aguardando confirmação.\n\n${workshopDetails(data)}\n\nFeito à Mão`,
+      `Olá, ${data.name}!\n\nRecebemos sua inscrição e ela está aguardando confirmação.\n\n${workshopDetails(data)}${cancellationInstructions(data)}\n\nFeito à Mão`,
     );
   },
 
@@ -62,7 +69,7 @@ export const emailService = {
     return sendSafely(
       data.email,
       `Inscrição confirmada — ${data.workshop.title}`,
-      `Olá, ${data.name}!\n\nSua inscrição foi confirmada. Sua vaga está garantida.\n\n${workshopDetails(data)}\n\nEsperamos você!\nFeito à Mão`,
+      `Olá, ${data.name}!\n\nSua inscrição foi confirmada. Sua vaga está garantida.\n\n${workshopDetails(data)}${cancellationInstructions(data)}\n\nEsperamos você!\nFeito à Mão`,
     );
   },
 

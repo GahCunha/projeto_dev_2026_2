@@ -51,6 +51,7 @@ model Enrollment {
   name         String           @map("nome")
   email        String
   status       EnrollmentStatus @default(PENDENTE)
+  cancellationTokenHash String? @unique @map("token_cancelamento_hash")
   workshopId   String           @map("oficina_id")
   workshop     Workshop         @relation(fields: [workshopId], references: [id])
   createdAt    DateTime         @default(now()) @map("criado_em")
@@ -60,4 +61,3 @@ model Enrollment {
   @@index([status, createdAt])
   @@map("inscricoes")
 }
-
