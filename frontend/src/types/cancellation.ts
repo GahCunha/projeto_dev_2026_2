@@ -6,8 +6,10 @@ export type EnrollmentCancellation = {
   status: EnrollmentStatus
   workshop: {
     title: string
-    startsAt: string
-    location: string
+  }
+  class: {
+    name: string
+    meetings: Array<{ id: string; startsAt: string; endsAt: string; location: string }>
   }
 }
 

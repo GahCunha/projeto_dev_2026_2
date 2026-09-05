@@ -31,7 +31,6 @@ describe('EnrollmentForm', () => {
         id: 'enrollment-id',
         name: 'Maria Artesã',
         email: 'maria@example.com',
-        workshopId: 'workshop-id',
         classId: 'class-id',
         status: 'PENDENTE',
         paymentStatus: 'PENDENTE',

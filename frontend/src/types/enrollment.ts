@@ -10,7 +10,6 @@ export type Enrollment = {
   email: string
   status: 'PENDENTE' | 'CONFIRMADA' | 'CANCELADA'
   paymentStatus: 'ISENTO' | 'PENDENTE' | 'PAGO'
-  workshopId: string
   classId: string
   createdAt: string
   updatedAt: string
@@ -28,7 +27,6 @@ export type AdminEnrollment = Enrollment & {
   workshop: {
     id: string
     title: string
-    startsAt: string
     active: boolean
   }
   class: {
@@ -43,7 +41,7 @@ export type AdminEnrollment = Enrollment & {
       endsAt: string
       location: string
     }>
-  } | null
+  }
 }
 
 export type EnrollmentPagination = {

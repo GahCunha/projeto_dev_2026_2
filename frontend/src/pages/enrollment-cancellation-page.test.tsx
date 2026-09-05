@@ -19,8 +19,10 @@ const enrollment = {
   status: 'PENDENTE' as const,
   workshop: {
     title: 'Cerâmica fria criativa',
-    startsAt: '2026-10-02T13:00:00.000Z',
-    location: 'Ateliê Modelagem',
+  },
+  class: {
+    name: 'Turma inicial',
+    meetings: [{ id: 'meeting', startsAt: '2026-10-02T13:00:00.000Z', endsAt: '2026-10-02T15:00:00.000Z', location: 'Ateliê Modelagem' }],
   },
 }
 

@@ -12,17 +12,22 @@ function enrollment(status: AdminEnrollment['status']): AdminEnrollment {
     status,
     paymentStatus: 'ISENTO',
     paidAt: null,
-    workshopId: 'workshop-id',
     classId: 'class-id',
     createdAt: '2026-09-01T12:00:00.000Z',
     updatedAt: '2026-09-01T12:00:00.000Z',
     workshop: {
       id: 'workshop-id',
       title: 'Crochê: primeiros pontos',
-      startsAt: '2026-10-01T13:00:00.000Z',
       active: true,
     },
-    class: null,
+    class: {
+      id: 'class-id',
+      name: 'Turma inicial',
+      capacity: 12,
+      price: 0,
+      active: true,
+      meetings: [{ id: 'meeting', startsAt: '2026-10-01T13:00:00.000Z', endsAt: '2026-10-01T15:00:00.000Z', location: 'Ateliê' }],
+    },
   }
 }
 

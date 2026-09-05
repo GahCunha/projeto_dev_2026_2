@@ -82,14 +82,11 @@ export function EnrollmentCancellationPage() {
                 <div className="sm:col-span-2">
                   <dt className={labelStyles}>Oficina</dt>
                   <dd className="mt-1 font-display text-xl font-bold text-carbon">{enrollment.workshop.title}</dd>
+                  <dd className="mt-1 text-sm text-muted">{enrollment.class.name}</dd>
                 </div>
-                <div>
-                  <dt className={labelStyles}>Data e horário</dt>
-                  <dd className="mt-1 text-sm font-bold text-carbon">{dateFormatter.format(new Date(enrollment.workshop.startsAt))}</dd>
-                </div>
-                <div>
-                  <dt className={labelStyles}>Local</dt>
-                  <dd className="mt-1 text-sm font-bold text-carbon">{enrollment.workshop.location}</dd>
+                <div className="sm:col-span-2">
+                  <dt className={labelStyles}>Encontros incluídos</dt>
+                  <dd className="mt-2"><ul className="space-y-2">{enrollment.class.meetings.map((meeting) => <li className="text-sm font-bold text-carbon" key={meeting.id}>{dateFormatter.format(new Date(meeting.startsAt))} — {meeting.location}</li>)}</ul></dd>
                 </div>
               </dl>
 
