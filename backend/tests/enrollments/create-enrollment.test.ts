@@ -97,10 +97,8 @@ describe("POST /api/inscricoes", () => {
       status: EnrollmentStatus.PENDENTE,
     });
 
-    const persistedEnrollment = await prisma.enrollment.findUnique({
-      where: {
-        email_workshopId: { email, workshopId: availableWorkshopId },
-      },
+    const persistedEnrollment = await prisma.enrollment.findFirst({
+      where: { email, classId: availableWorkshopId },
     });
 
     expect(persistedEnrollment).not.toBeNull();
@@ -131,7 +129,7 @@ describe("POST /api/inscricoes", () => {
     });
 
     expect(response.status).toBe(422);
-    expect(response.body.error).toBe("WORKSHOP_UNAVAILABLE");
+    expect(response.body.error).toBe("CLASS_UNAVAILABLE");
   });
 
   it("rejects a duplicate enrollment", async () => {
@@ -165,7 +163,7 @@ describe("POST /api/inscricoes", () => {
     });
 
     expect(fullResponse.status).toBe(409);
-    expect(fullResponse.body.error).toBe("WORKSHOP_FULL");
+    expect(fullResponse.body.error).toBe("CLASS_FULL");
   });
 
   it("allows only one enrollment to take the last seat under concurrent requests", async () => {
@@ -183,7 +181,7 @@ describe("POST /api/inscricoes", () => {
     ]);
 
     expect([firstResponse.status, secondResponse.status].sort()).toEqual([201, 409]);
-    expect([firstResponse.body.error, secondResponse.body.error]).toContain("WORKSHOP_FULL");
+    expect([firstResponse.body.error, secondResponse.body.error]).toContain("CLASS_FULL");
 
     const occupiedSeats = await prisma.enrollment.count({
       where: {

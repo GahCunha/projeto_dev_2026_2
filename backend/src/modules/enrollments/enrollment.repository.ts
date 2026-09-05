@@ -18,43 +18,79 @@ export const enrollmentRepository = {
 
   createWithSeatReservation(data: CreateEnrollmentInput, cancellationTokenHash: string) {
     return prisma.$transaction(async (transaction) => {
-      const lockedWorkshops = await transaction.$queryRaw<Array<{ id: string }>>`
-        SELECT "id"
-        FROM "oficinas"
-        WHERE "id" = ${data.workshopId}
-        FOR UPDATE
+      let classId = data.classId;
+
+      if (!classId && data.workshopId) {
+        const lockedWorkshops = await transaction.$queryRaw<Array<{ id: string }>>`
+          SELECT "id" FROM "oficinas" WHERE "id" = ${data.workshopId} FOR UPDATE
+        `;
+        if (lockedWorkshops.length === 0) return { outcome: "unavailable" } as const;
+
+        const legacyWorkshop = await transaction.workshop.findUnique({
+          where: { id: data.workshopId },
+        });
+        if (!legacyWorkshop) return { outcome: "unavailable" } as const;
+
+        await transaction.workshopClass.upsert({
+          where: { id: legacyWorkshop.id },
+          update: {},
+          create: {
+            id: legacyWorkshop.id,
+            workshopId: legacyWorkshop.id,
+            name: "Turma inicial",
+            capacity: legacyWorkshop.capacity,
+            active: legacyWorkshop.active,
+          },
+        });
+        await transaction.classMeeting.upsert({
+          where: { id: legacyWorkshop.id },
+          update: {},
+          create: {
+            id: legacyWorkshop.id,
+            classId: legacyWorkshop.id,
+            startsAt: legacyWorkshop.startsAt,
+            endsAt: new Date(legacyWorkshop.startsAt.getTime() + legacyWorkshop.durationMin * 60_000),
+            location: legacyWorkshop.location,
+          },
+        });
+        classId = legacyWorkshop.id;
+      }
+
+      if (!classId) return { outcome: "unavailable" } as const;
+
+      const lockedClasses = await transaction.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "turmas" WHERE "id" = ${classId} FOR UPDATE
       `;
+      if (lockedClasses.length === 0) return { outcome: "unavailable" } as const;
 
-      if (lockedWorkshops.length === 0) return { outcome: "unavailable" } as const;
-
-      const workshop = await transaction.workshop.findUnique({
-        where: { id: data.workshopId },
-        select: {
-          id: true,
-          title: true,
-          startsAt: true,
-          location: true,
-          active: true,
-          capacity: true,
+      const workshopClass = await transaction.workshopClass.findUnique({
+        where: { id: classId },
+        include: {
+          workshop: { select: { id: true, title: true, active: true } },
+          meetings: { orderBy: { startsAt: "asc" } },
         },
       });
 
-      if (!workshop || !workshop.active || workshop.startsAt <= new Date()) {
+      const firstFutureMeeting = workshopClass?.meetings.find((meeting) => meeting.startsAt > new Date());
+      if (!workshopClass || !workshopClass.active || !workshopClass.workshop.active || !firstFutureMeeting) {
         return { outcome: "unavailable" } as const;
       }
 
       const occupiedSeats = await transaction.enrollment.count({
         where: {
-          workshopId: workshop.id,
+          classId: workshopClass.id,
           status: { not: EnrollmentStatus.CANCELADA },
         },
       });
 
-      if (occupiedSeats >= workshop.capacity) return { outcome: "full" } as const;
+      if (occupiedSeats >= workshopClass.capacity) return { outcome: "full" } as const;
 
       const enrollment = await transaction.enrollment.create({
         data: {
-          ...data,
+          name: data.name,
+          email: data.email,
+          workshopId: workshopClass.workshopId,
+          classId: workshopClass.id,
           status: EnrollmentStatus.PENDENTE,
           cancellationTokenHash,
         },
@@ -64,12 +100,21 @@ export const enrollmentRepository = {
           email: true,
           status: true,
           workshopId: true,
+          classId: true,
           createdAt: true,
           updatedAt: true,
         },
       });
 
-      return { outcome: "created", enrollment, workshop } as const;
+      return {
+        outcome: "created",
+        enrollment,
+        workshop: {
+          title: workshopClass.workshop.title,
+          startsAt: firstFutureMeeting.startsAt,
+          location: firstFutureMeeting.location,
+        },
+      } as const;
     });
   },
 
@@ -82,6 +127,7 @@ export const enrollmentRepository = {
         email: true,
         status: true,
         workshopId: true,
+        classId: true,
         workshop: {
           select: { title: true, startsAt: true, location: true },
         },
@@ -148,6 +194,7 @@ export const enrollmentRepository = {
     const where: Prisma.EnrollmentWhereInput = {
       status: query.status,
       workshopId: query.workshopId,
+      classId: query.classId,
       OR: query.search
         ? [
             { name: { contains: query.search, mode: "insensitive" } },
@@ -165,6 +212,17 @@ export const enrollmentRepository = {
           email: true,
           status: true,
           workshopId: true,
+          classId: true,
+          class: {
+            select: {
+              id: true,
+              name: true,
+              capacity: true,
+              price: true,
+              active: true,
+              meetings: { orderBy: { startsAt: "asc" } },
+            },
+          },
           createdAt: true,
           updatedAt: true,
           workshop: {

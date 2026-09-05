@@ -12,6 +12,7 @@ export const openApiDocument = {
   tags: [
     { name: "Sistema", description: "Saúde e informações da API" },
     { name: "Oficinas", description: "Consulta pública de oficinas" },
+    { name: "Turmas", description: "Datas, valores e vagas das turmas" },
     { name: "Inscrições", description: "Inscrições públicas em oficinas" },
     { name: "Autenticação", description: "Sessão do administrador" },
     { name: "Administração", description: "Gestão protegida da plataforma" },
@@ -105,9 +106,65 @@ export const openApiDocument = {
           },
         ],
       },
+      ClassMeeting: {
+        type: "object",
+        required: ["id", "startsAt", "endsAt", "location"],
+        properties: {
+          id: { type: "string", format: "uuid" },
+          startsAt: { type: "string", format: "date-time" },
+          endsAt: { type: "string", format: "date-time" },
+          location: { type: "string", example: "Ateliê Têxtil, sala 1" },
+        },
+      },
+      WorkshopClass: {
+        type: "object",
+        required: [
+          "id", "workshopId", "name", "capacity", "price", "active",
+          "meetings", "occupiedSeats", "availableSeats",
+        ],
+        properties: {
+          id: { type: "string", format: "uuid" },
+          workshopId: { type: "string", format: "uuid" },
+          name: { type: "string", example: "Turma noturna de setembro" },
+          capacity: { type: "integer", minimum: 1, example: 12 },
+          price: { type: "number", format: "double", minimum: 0, multipleOf: 0.01, example: 120 },
+          active: { type: "boolean", example: true },
+          meetings: {
+            type: "array",
+            items: { $ref: "#/components/schemas/ClassMeeting" },
+          },
+          occupiedSeats: { type: "integer", minimum: 0 },
+          availableSeats: { type: "integer", minimum: 0 },
+        },
+      },
+      ClassInput: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "capacity", "price", "meetings"],
+        properties: {
+          name: { type: "string", minLength: 3, maxLength: 100 },
+          capacity: { type: "integer", minimum: 1, maximum: 500 },
+          price: { type: "number", format: "double", minimum: 0, multipleOf: 0.01, example: 120 },
+          active: { type: "boolean" },
+          meetings: {
+            type: "array",
+            minItems: 1,
+            maxItems: 60,
+            items: {
+              type: "object",
+              required: ["startsAt", "endsAt", "location"],
+              properties: {
+                startsAt: { type: "string", format: "date-time" },
+                endsAt: { type: "string", format: "date-time" },
+                location: { type: "string", minLength: 3, maxLength: 160 },
+              },
+            },
+          },
+        },
+      },
       Enrollment: {
         type: "object",
-        required: ["id", "name", "email", "status", "workshopId", "createdAt", "updatedAt"],
+        required: ["id", "name", "email", "status", "workshopId", "classId", "createdAt", "updatedAt"],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
@@ -118,6 +175,7 @@ export const openApiDocument = {
             example: "PENDENTE",
           },
           workshopId: { type: "string", format: "uuid" },
+          classId: { type: "string", format: "uuid" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
@@ -186,7 +244,7 @@ export const openApiDocument = {
       CreateEnrollmentInput: {
         type: "object",
         additionalProperties: false,
-        required: ["name", "email", "workshopId"],
+        required: ["name", "email", "classId"],
         properties: {
           name: { type: "string", minLength: 3, maxLength: 120, example: "Maria Artesã" },
           email: {
@@ -195,7 +253,13 @@ export const openApiDocument = {
             maxLength: 254,
             example: "maria@example.com",
           },
-          workshopId: { type: "string", format: "uuid" },
+          classId: { type: "string", format: "uuid" },
+          workshopId: {
+            type: "string",
+            format: "uuid",
+            deprecated: true,
+            description: "Compatibilidade temporária: seleciona a turma inicial da oficina.",
+          },
         },
       },
       CreateWorkshopInput: {
@@ -394,6 +458,33 @@ export const openApiDocument = {
               "application/json": { schema: { $ref: "#/components/schemas/Error" } },
             },
           },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/oficinas/{workshopId}/turmas": {
+      get: {
+        tags: ["Turmas"],
+        summary: "Lista as turmas disponíveis de uma oficina",
+        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        responses: {
+          "200": {
+            description: "Turmas ativas com aulas futuras e vagas calculadas",
+            content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          },
+          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/turmas/{id}": {
+      get: {
+        tags: ["Turmas"],
+        summary: "Consulta uma turma disponível",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        responses: {
+          "200": { description: "Turma encontrada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "404": { description: "Turma não encontrada ou inativa", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -795,6 +886,64 @@ export const openApiDocument = {
               "application/json": { schema: { $ref: "#/components/schemas/Error" } },
             },
           },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/oficinas/{workshopId}/turmas": {
+      get: {
+        tags: ["Administração"],
+        summary: "Lista todas as turmas de uma oficina",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        responses: {
+          "200": { description: "Turmas ativas e inativas", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/WorkshopClass" } } } } } } },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+        },
+      },
+      post: {
+        tags: ["Administração"],
+        summary: "Cria uma turma com uma ou mais aulas",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/ClassInput" } } } },
+        responses: {
+          "201": { description: "Turma criada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/turmas/{id}": {
+      patch: {
+        tags: ["Administração"],
+        summary: "Edita dados e aulas de uma turma",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/ClassInput" } } } },
+        responses: {
+          "200": { description: "Turma atualizada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": { description: "Turma não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "409": { description: "Capacidade menor que a ocupação", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/admin/turmas/{id}/status": {
+      patch: {
+        tags: ["Administração"],
+        summary: "Ativa ou desativa uma turma",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UpdateWorkshopStatusInput" } } } },
+        responses: {
+          "200": { description: "Status atualizado", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+          "404": { description: "Turma não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "409": { description: "A turma já possui o status solicitado", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },

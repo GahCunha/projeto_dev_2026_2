@@ -143,14 +143,14 @@ export const enrollmentService = {
 
       if (reservation.outcome === "unavailable") {
         throw new AppError(
-          "Oficina não encontrada ou indisponível para inscrições.",
+          "Turma não encontrada ou indisponível para inscrições.",
           422,
-          "WORKSHOP_UNAVAILABLE",
+          "CLASS_UNAVAILABLE",
         );
       }
 
       if (reservation.outcome === "full") {
-        throw new AppError("Não há vagas disponíveis nesta oficina.", 409, "WORKSHOP_FULL");
+        throw new AppError("Não há vagas disponíveis nesta turma.", 409, "CLASS_FULL");
       }
 
       const { enrollment, workshop } = reservation;
@@ -169,7 +169,7 @@ export const enrollmentService = {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         throw new AppError(
-          "Este e-mail já possui uma inscrição nesta oficina.",
+          "Este e-mail já possui uma inscrição nesta turma.",
           409,
           "ENROLLMENT_ALREADY_EXISTS",
         );

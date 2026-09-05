@@ -41,9 +41,41 @@ model Workshop {
   createdAt    DateTime     @default(now()) @map("criado_em")
   updatedAt    DateTime     @updatedAt @map("atualizado_em")
   enrollments  Enrollment[]
+  classes      WorkshopClass[]
 
   @@index([active, startsAt])
   @@map("oficinas")
+}
+
+model WorkshopClass {
+  id          String         @id @default(uuid())
+  workshopId  String         @map("oficina_id")
+  workshop    Workshop       @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  name        String         @map("nome")
+  capacity    Int            @map("vagas")
+  price       Decimal        @default(0) @db.Decimal(10, 2) @map("valor")
+  active      Boolean        @default(true) @map("ativa")
+  createdAt   DateTime       @default(now()) @map("criado_em")
+  updatedAt   DateTime       @updatedAt @map("atualizado_em")
+  meetings    ClassMeeting[]
+  enrollments Enrollment[]
+
+  @@index([workshopId, active])
+  @@map("turmas")
+}
+
+model ClassMeeting {
+  id        String        @id @default(uuid())
+  classId   String        @map("turma_id")
+  class     WorkshopClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  startsAt  DateTime      @map("data_inicio")
+  endsAt    DateTime      @map("data_fim")
+  location  String        @map("local")
+  createdAt DateTime      @default(now()) @map("criado_em")
+  updatedAt DateTime      @updatedAt @map("atualizado_em")
+
+  @@index([classId, startsAt])
+  @@map("encontros_turma")
 }
 
 model Enrollment {
@@ -54,10 +86,12 @@ model Enrollment {
   cancellationTokenHash String? @unique @map("token_cancelamento_hash")
   workshopId   String           @map("oficina_id")
   workshop     Workshop         @relation(fields: [workshopId], references: [id])
+  classId      String?          @map("turma_id")
+  class        WorkshopClass?   @relation(fields: [classId], references: [id])
   createdAt    DateTime         @default(now()) @map("criado_em")
   updatedAt    DateTime         @updatedAt @map("atualizado_em")
 
-  @@unique([email, workshopId])
+  @@unique([email, classId])
   @@index([status, createdAt])
   @@map("inscricoes")
 }
