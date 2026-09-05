@@ -156,7 +156,7 @@ export function AdminWorkshopsPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {workshops.map((workshop) => <AdminWorkshopCard key={workshop.id} workshop={workshop} onEdit={setFormWorkshop} onStatusChange={setStatusWorkshop} />)}
           </div>
-          <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
+          <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} itemLabel="oficinas" onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
         </>
       )}
 

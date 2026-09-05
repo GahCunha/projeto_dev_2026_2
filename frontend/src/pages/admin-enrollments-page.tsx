@@ -181,7 +181,7 @@ export function AdminEnrollmentsPage() {
       {!isLoading && !error && enrollments.length > 0 && (
         <>
           <EnrollmentsTable enrollments={enrollments} updatingEnrollmentId={updatingEnrollmentId} onStatusChange={(enrollment, nextStatus) => setPendingStatusChange({ enrollment, status: nextStatus })} />
-          <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
+          <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} itemLabel="inscrições" onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
         </>
       )}
 
