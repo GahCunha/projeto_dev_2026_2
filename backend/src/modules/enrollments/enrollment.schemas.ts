@@ -5,14 +5,9 @@ export const createEnrollmentSchema = z
   .object({
     name: z.string().trim().min(3).max(120),
     email: z.string().trim().email().max(254).transform((email) => email.toLowerCase()),
-    classId: z.string().uuid("Identificador de turma inválido").optional(),
-    workshopId: z.string().uuid("Identificador de oficina inválido").optional(),
+    classId: z.string().uuid("Identificador de turma inválido"),
   })
-  .strict()
-  .refine(({ classId, workshopId }) => classId || workshopId, {
-    message: "Informe a turma desejada",
-    path: ["classId"],
-  });
+  .strict();
 
 export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;
 

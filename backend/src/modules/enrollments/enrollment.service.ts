@@ -36,13 +36,9 @@ function enrollmentEmailData(enrollment: Awaited<ReturnType<typeof enrollmentRep
     email: enrollment.email,
     workshop: {
       title: enrollment.workshop.title,
-      className: enrollment.class?.name ?? "Turma inicial",
-      price: enrollment.class?.price ?? 0,
-      meetings: enrollment.class?.meetings ?? [{
-        startsAt: enrollment.workshop.startsAt,
-        endsAt: enrollment.workshop.startsAt,
-        location: enrollment.workshop.location,
-      }],
+      className: enrollment.class.name,
+      price: enrollment.class.price,
+      meetings: enrollment.class.meetings,
     },
   };
 }
@@ -184,22 +180,20 @@ export const enrollmentService = {
       throw new AppError("O pagamento foi alterado por outra operação.", 409, "PAYMENT_CONFLICT");
     }
 
-    if (paidEnrollment.class) {
-      const emailData = {
-        name: paidEnrollment.name,
-        email: paidEnrollment.email,
-        workshop: {
-          title: paidEnrollment.workshop.title,
-          className: paidEnrollment.class.name,
-          price: paidEnrollment.class.price,
-          meetings: paidEnrollment.class.meetings,
-        },
-      };
-      await Promise.all([
-        emailService.sendPaymentReceived(emailData),
-        emailService.sendPaymentNotificationToAdmin(emailData),
-      ]);
-    }
+    const emailData = {
+      name: paidEnrollment.name,
+      email: paidEnrollment.email,
+      workshop: {
+        title: paidEnrollment.workshop.title,
+        className: paidEnrollment.class.name,
+        price: paidEnrollment.class.price,
+        meetings: paidEnrollment.class.meetings,
+      },
+    };
+    await Promise.all([
+      emailService.sendPaymentReceived(emailData),
+      emailService.sendPaymentNotificationToAdmin(emailData),
+    ]);
 
     return publicPayment(paidEnrollment);
   },

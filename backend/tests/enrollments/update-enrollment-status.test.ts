@@ -17,6 +17,7 @@ let canceledEnrollmentId: string;
 let unpaidEnrollmentId: string;
 
 beforeAll(async () => {
+  const startsAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
   const admin = await prisma.user.create({
     data: {
       name: "Admin dos Status",
@@ -29,11 +30,15 @@ beforeAll(async () => {
     data: {
       title: `Oficina de status ${marker}`,
       description: "Oficina criada para testar alterações de status.",
-      startsAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      durationMin: 120,
-      capacity: 10,
-      location: "Sala de testes",
+      classes: {
+        create: {
+          name: "Turma gratuita",
+          capacity: 10,
+          meetings: { create: { startsAt, endsAt: new Date(startsAt.getTime() + 7_200_000), location: "Sala de testes" } },
+        },
+      },
     },
+    include: { classes: true },
   });
 
   const [pendingEnrollment, canceledEnrollment] = await Promise.all([
@@ -41,7 +46,7 @@ beforeAll(async () => {
       data: {
         name: "Pessoa Pendente",
         email: `pending-${marker}@example.com`,
-        workshopId: workshop.id,
+        classId: workshop.classes[0]!.id,
       },
     }),
     prisma.enrollment.create({
@@ -49,7 +54,7 @@ beforeAll(async () => {
         name: "Pessoa Cancelada",
         email: `canceled-${marker}@example.com`,
         status: EnrollmentStatus.CANCELADA,
-        workshopId: workshop.id,
+        classId: workshop.classes[0]!.id,
       },
     }),
   ]);
@@ -62,9 +67,9 @@ beforeAll(async () => {
       price: 50,
       meetings: {
         create: {
-          startsAt: workshop.startsAt,
-          endsAt: new Date(workshop.startsAt.getTime() + 7_200_000),
-          location: workshop.location,
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + 7_200_000),
+          location: "Sala de testes",
         },
       },
     },
@@ -73,7 +78,6 @@ beforeAll(async () => {
     data: {
       name: "Pessoa sem pagamento",
       email: `unpaid-${marker}@example.com`,
-      workshopId: workshop.id,
       classId: paidClass.id,
       paymentStatus: PaymentStatus.PENDENTE,
     },
@@ -87,7 +91,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId } });
+  await prisma.enrollment.deleteMany({ where: { class: { workshopId } } });
   await prisma.workshop.delete({ where: { id: workshopId } });
   await prisma.user.delete({ where: { id: adminId } });
   await prisma.$disconnect();

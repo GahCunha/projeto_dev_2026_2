@@ -7,60 +7,13 @@ import type {
 } from "./enrollment.schemas.js";
 
 export const enrollmentRepository = {
-  countActiveByWorkshop(workshopId: string) {
-    return prisma.enrollment.count({
-      where: {
-        workshopId,
-        status: { not: EnrollmentStatus.CANCELADA },
-      },
-    });
-  },
-
   createWithSeatReservation(
     data: CreateEnrollmentInput,
     cancellationTokenHash: string,
     paymentTokenHash: string,
   ) {
     return prisma.$transaction(async (transaction) => {
-      let classId = data.classId;
-
-      if (!classId && data.workshopId) {
-        const lockedWorkshops = await transaction.$queryRaw<Array<{ id: string }>>`
-          SELECT "id" FROM "oficinas" WHERE "id" = ${data.workshopId} FOR UPDATE
-        `;
-        if (lockedWorkshops.length === 0) return { outcome: "unavailable" } as const;
-
-        const legacyWorkshop = await transaction.workshop.findUnique({
-          where: { id: data.workshopId },
-        });
-        if (!legacyWorkshop) return { outcome: "unavailable" } as const;
-
-        await transaction.workshopClass.upsert({
-          where: { id: legacyWorkshop.id },
-          update: {},
-          create: {
-            id: legacyWorkshop.id,
-            workshopId: legacyWorkshop.id,
-            name: "Turma inicial",
-            capacity: legacyWorkshop.capacity,
-            active: legacyWorkshop.active,
-          },
-        });
-        await transaction.classMeeting.upsert({
-          where: { id: legacyWorkshop.id },
-          update: {},
-          create: {
-            id: legacyWorkshop.id,
-            classId: legacyWorkshop.id,
-            startsAt: legacyWorkshop.startsAt,
-            endsAt: new Date(legacyWorkshop.startsAt.getTime() + legacyWorkshop.durationMin * 60_000),
-            location: legacyWorkshop.location,
-          },
-        });
-        classId = legacyWorkshop.id;
-      }
-
-      if (!classId) return { outcome: "unavailable" } as const;
+      const classId = data.classId;
 
       const lockedClasses = await transaction.$queryRaw<Array<{ id: string }>>`
         SELECT "id" FROM "turmas" WHERE "id" = ${classId} FOR UPDATE
@@ -93,7 +46,6 @@ export const enrollmentRepository = {
         data: {
           name: data.name,
           email: data.email,
-          workshopId: workshopClass.workshopId,
           classId: workshopClass.id,
           status: EnrollmentStatus.PENDENTE,
           paymentStatus: workshopClass.price.greaterThan(0)
@@ -108,7 +60,6 @@ export const enrollmentRepository = {
           email: true,
           status: true,
           paymentStatus: true,
-          workshopId: true,
           classId: true,
           createdAt: true,
           updatedAt: true,
@@ -137,20 +88,21 @@ export const enrollmentRepository = {
         email: true,
         status: true,
         paymentStatus: true,
-        workshopId: true,
         classId: true,
         class: {
           select: {
             name: true,
             price: true,
             meetings: { orderBy: { startsAt: "asc" } },
+            workshop: { select: { title: true } },
           },
         },
-        workshop: {
-          select: { title: true, startsAt: true, location: true },
-        },
       },
-    });
+    }).then((enrollment) => enrollment ? {
+      ...enrollment,
+      workshop: enrollment.class.workshop,
+      class: { ...enrollment.class, workshop: undefined },
+    } : null);
   },
 
   findByCancellationTokenHash(cancellationTokenHash: string) {
@@ -161,18 +113,20 @@ export const enrollmentRepository = {
         name: true,
         status: true,
         paymentStatus: true,
-        workshop: {
-          select: { title: true, startsAt: true, location: true },
-        },
         class: {
           select: {
             name: true,
             price: true,
             meetings: { orderBy: { startsAt: "asc" } },
+            workshop: { select: { title: true } },
           },
         },
       },
-    });
+    }).then((enrollment) => enrollment ? {
+      ...enrollment,
+      workshop: enrollment.class.workshop,
+      class: { ...enrollment.class, workshop: undefined },
+    } : null);
   },
 
   findByPaymentTokenHash(paymentTokenHash: string) {
@@ -185,16 +139,20 @@ export const enrollmentRepository = {
         status: true,
         paymentStatus: true,
         paidAt: true,
-        workshop: { select: { title: true } },
         class: {
           select: {
             name: true,
             price: true,
             meetings: { orderBy: { startsAt: "asc" } },
+            workshop: { select: { title: true } },
           },
         },
       },
-    });
+    }).then((enrollment) => enrollment ? {
+      ...enrollment,
+      workshop: enrollment.class.workshop,
+      class: { ...enrollment.class, workshop: undefined },
+    } : null);
   },
 
   async markPaymentAsPaid(paymentTokenHash: string) {
@@ -246,7 +204,7 @@ export const enrollmentRepository = {
         email: true,
         status: true,
         paymentStatus: true,
-        workshopId: true,
+        classId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -256,7 +214,7 @@ export const enrollmentRepository = {
   async list(query: ListEnrollmentsQuery) {
     const where: Prisma.EnrollmentWhereInput = {
       status: query.status,
-      workshopId: query.workshopId,
+      class: query.workshopId ? { workshopId: query.workshopId } : undefined,
       classId: query.classId,
       OR: query.search
         ? [
@@ -276,7 +234,6 @@ export const enrollmentRepository = {
           status: true,
           paymentStatus: true,
           paidAt: true,
-          workshopId: true,
           classId: true,
           class: {
             select: {
@@ -286,26 +243,26 @@ export const enrollmentRepository = {
               price: true,
               active: true,
               meetings: { orderBy: { startsAt: "asc" } },
+              workshop: { select: { id: true, title: true, active: true } },
             },
           },
           createdAt: true,
           updatedAt: true,
-          workshop: {
-            select: {
-              id: true,
-              title: true,
-              startsAt: true,
-              active: true,
-            },
-          },
         },
-        orderBy: [{ workshop: { startsAt: "asc" } }, { createdAt: "desc" }],
+        orderBy: { createdAt: "desc" },
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),
       prisma.enrollment.count({ where }),
     ]);
 
-    return { items, totalItems };
+    return {
+      items: items.map((enrollment) => ({
+        ...enrollment,
+        workshop: enrollment.class.workshop,
+        class: { ...enrollment.class, workshop: undefined },
+      })),
+      totalItems,
+    };
   },
 };

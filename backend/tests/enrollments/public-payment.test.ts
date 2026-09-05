@@ -15,10 +15,6 @@ beforeAll(async () => {
     data: {
       title: `Oficina paga ${randomUUID()}`,
       description: "Oficina criada para testar o pagamento ilustrativo.",
-      startsAt,
-      durationMin: 120,
-      capacity: 10,
-      location: "Sala de testes",
       classes: {
         create: {
           name: "Turma paga",
@@ -38,7 +34,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId } });
+  await prisma.enrollment.deleteMany({ where: { classId } });
   await prisma.workshop.delete({ where: { id: workshopId } });
   await prisma.$disconnect();
 });

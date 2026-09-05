@@ -25,10 +25,6 @@ beforeAll(async () => {
         description: "Oficina futura criada para testar a listagem pública.",
         imageUrl: "https://example.com/bordado.jpg",
         materials: ["Bastidor", "Agulha", "Linha"],
-        startsAt: dateFromNow(10),
-        durationMin: 120,
-        capacity: 5,
-        location: "Sala pública",
         classes: {
           create: {
             name: "Turma futura",
@@ -44,10 +40,6 @@ beforeAll(async () => {
         title: `Oficina encerrada ${marker}`,
         category: "Outros",
         description: "Oficina passada que não deve aparecer na listagem pública.",
-        startsAt: dateFromNow(-10),
-        durationMin: 120,
-        capacity: 5,
-        location: "Sala antiga",
         classes: {
           create: {
             name: "Turma encerrada",
@@ -63,10 +55,6 @@ beforeAll(async () => {
         title: `Oficina inativa ${marker}`,
         category: "Outros",
         description: "Oficina inativa que não deve aparecer na listagem pública.",
-        startsAt: dateFromNow(20),
-        durationMin: 120,
-        capacity: 5,
-        location: "Sala inativa",
         active: false,
         classes: {
           create: {
@@ -91,21 +79,18 @@ beforeAll(async () => {
       {
         name: "Pessoa Pendente",
         email: `pending-${marker}@example.com`,
-        workshopId: availableWorkshopId,
         classId: availableClassId,
       },
       {
         name: "Pessoa Confirmada",
         email: `confirmed-${marker}@example.com`,
         status: EnrollmentStatus.CONFIRMADA,
-        workshopId: availableWorkshopId,
         classId: availableClassId,
       },
       {
         name: "Pessoa Cancelada",
         email: `canceled-${marker}@example.com`,
         status: EnrollmentStatus.CANCELADA,
-        workshopId: availableWorkshopId,
         classId: availableClassId,
       },
     ],
@@ -113,7 +98,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId: { in: workshopIds } } });
+  await prisma.enrollment.deleteMany({ where: { class: { workshopId: { in: workshopIds } } } });
   await prisma.workshop.deleteMany({ where: { id: { in: workshopIds } } });
   await prisma.$disconnect();
 });

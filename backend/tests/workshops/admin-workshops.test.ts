@@ -31,10 +31,6 @@ beforeAll(async () => {
       data: {
         title: `Cerâmica ${marker}`,
         description: "Oficina ativa criada para testar a gestão administrativa.",
-        startsAt: futureDate(10),
-        durationMin: 120,
-        capacity: 12,
-        location: `Ateliê Norte ${marker}`,
         classes: {
           create: {
             name: "Turma inicial",
@@ -49,10 +45,6 @@ beforeAll(async () => {
       data: {
         title: `Crochê ${marker}`,
         description: "Oficina inativa criada para testar a gestão administrativa.",
-        startsAt: futureDate(20),
-        durationMin: 90,
-        capacity: 8,
-        location: `Ateliê Sul ${marker}`,
         active: false,
         classes: {
           create: {
@@ -76,21 +68,18 @@ beforeAll(async () => {
       {
         name: "Pessoa Pendente",
         email: `pending-${marker}@example.com`,
-        workshopId: managedWorkshopId,
         classId: managedClassId,
       },
       {
         name: "Pessoa Confirmada",
         email: `confirmed-${marker}@example.com`,
         status: "CONFIRMADA",
-        workshopId: managedWorkshopId,
         classId: managedClassId,
       },
       {
         name: "Pessoa Cancelada",
         email: `canceled-${marker}@example.com`,
         status: "CANCELADA",
-        workshopId: managedWorkshopId,
         classId: managedClassId,
       },
     ],
@@ -98,7 +87,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId: { in: workshopIds } } });
+  await prisma.enrollment.deleteMany({ where: { class: { workshopId: { in: workshopIds } } } });
   await prisma.workshop.deleteMany({ where: { id: { in: workshopIds } } });
   await prisma.user.delete({ where: { id: adminId } });
   await prisma.$disconnect();

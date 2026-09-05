@@ -7,24 +7,30 @@ import { prisma } from "../../src/config/database.js";
 import { emailService } from "../../src/shared/email/email.service.js";
 
 let workshopId: string;
+let classId: string;
 
 beforeAll(async () => {
   const workshop = await prisma.workshop.create({
     data: {
       title: `Oficina com cancelamento ${randomUUID()}`,
       description: "Oficina criada para testar o cancelamento pelo visitante.",
-      startsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      durationMin: 120,
-      capacity: 10,
-      location: "Sala de testes",
+      classes: {
+        create: {
+          name: "Turma",
+          capacity: 10,
+          meetings: { create: { startsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), endsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000 + 7_200_000), location: "Sala de testes" } },
+        },
+      },
     },
+    include: { classes: true },
   });
 
   workshopId = workshop.id;
+  classId = workshop.classes[0]!.id;
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId } });
+  await prisma.enrollment.deleteMany({ where: { classId } });
   await prisma.workshop.delete({ where: { id: workshopId } });
   await prisma.$disconnect();
 });
@@ -34,7 +40,7 @@ async function createEnrollmentAndGetToken() {
   const response = await request(app).post("/api/inscricoes").send({
     name: "Visitante Artesã",
     email: `cancelamento-${randomUUID()}@example.com`,
-    workshopId,
+    classId,
   });
 
   expect(response.status).toBe(201);
@@ -54,7 +60,8 @@ describe("cancelamento público de inscrição", () => {
     expect(response.body.data).toMatchObject({
       name: "Visitante Artesã",
       status: EnrollmentStatus.PENDENTE,
-      workshop: { title: expect.any(String), location: "Sala de testes" },
+      workshop: { title: expect.any(String) },
+      class: { name: "Turma", meetings: [expect.objectContaining({ location: "Sala de testes" })] },
     });
     expect(response.body.data).not.toHaveProperty("email");
     expect(response.body.data).not.toHaveProperty("cancellationTokenHash");

@@ -13,6 +13,8 @@ const workshopIds: string[] = [];
 let adminId: string;
 let firstWorkshopId: string;
 let secondWorkshopId: string;
+let firstClassId: string;
+let secondClassId: string;
 
 function futureDate(days: number) {
   const date = new Date();
@@ -33,27 +35,25 @@ beforeAll(async () => {
       data: {
         title: `Primeira oficina ${marker}`,
         description: "Oficina criada para testar a listagem administrativa.",
-        startsAt: futureDate(10),
-        durationMin: 120,
-        capacity: 20,
-        location: "Sala de testes",
+        classes: { create: { name: "Turma 1", capacity: 20, meetings: { create: { startsAt: futureDate(10), endsAt: futureDate(10.1), location: "Sala de testes" } } } },
       },
+      include: { classes: true },
     }),
     prisma.workshop.create({
       data: {
         title: `Segunda oficina ${marker}`,
         description: "Oficina criada para testar a listagem administrativa.",
-        startsAt: futureDate(20),
-        durationMin: 120,
-        capacity: 20,
-        location: "Sala de testes",
+        classes: { create: { name: "Turma 2", capacity: 20, meetings: { create: { startsAt: futureDate(20), endsAt: futureDate(20.1), location: "Sala de testes" } } } },
       },
+      include: { classes: true },
     }),
   ]);
 
   adminId = admin.id;
   firstWorkshopId = firstWorkshop.id;
   secondWorkshopId = secondWorkshop.id;
+  firstClassId = firstWorkshop.classes[0]!.id;
+  secondClassId = secondWorkshop.classes[0]!.id;
   workshopIds.push(firstWorkshopId, secondWorkshopId);
 
   await prisma.enrollment.createMany({
@@ -62,32 +62,32 @@ beforeAll(async () => {
         name: `Busca Especial ${marker}`,
         email: `${marker}-1@example.com`,
         status: EnrollmentStatus.PENDENTE,
-        workshopId: firstWorkshopId,
+        classId: firstClassId,
       },
       {
         name: `Pessoa Confirmada ${marker}`,
         email: `${marker}-2@example.com`,
         status: EnrollmentStatus.CONFIRMADA,
-        workshopId: secondWorkshopId,
+        classId: secondClassId,
       },
       {
         name: `Pessoa Cancelada ${marker}`,
         email: `${marker}-3@example.com`,
         status: EnrollmentStatus.CANCELADA,
-        workshopId: firstWorkshopId,
+        classId: firstClassId,
       },
       {
         name: `Outra Pessoa ${marker}`,
         email: `${marker}-4@example.com`,
         status: EnrollmentStatus.PENDENTE,
-        workshopId: secondWorkshopId,
+        classId: secondClassId,
       },
     ],
   });
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId: { in: workshopIds } } });
+  await prisma.enrollment.deleteMany({ where: { class: { workshopId: { in: workshopIds } } } });
   await prisma.workshop.deleteMany({ where: { id: { in: workshopIds } } });
   await prisma.user.deleteMany({ where: { id: adminId } });
   await prisma.$disconnect();
@@ -126,10 +126,7 @@ describe("GET /api/admin/inscricoes", () => {
       totalItems: 4,
       totalPages: 2,
     });
-    expect(response.body.data[0].workshop).toMatchObject({
-      id: firstWorkshopId,
-      active: true,
-    });
+    expect(response.body.data[0].workshop).toMatchObject({ id: expect.any(String), active: true });
   });
 
   it("searches by name without case sensitivity", async () => {
@@ -166,7 +163,7 @@ describe("GET /api/admin/inscricoes", () => {
     expect(response.body.data).toHaveLength(2);
     expect(
       response.body.data.every(
-        (item: { workshopId: string }) => item.workshopId === firstWorkshopId,
+        (item: { workshop: { id: string } }) => item.workshop.id === firstWorkshopId,
       ),
     ).toBe(true);
   });

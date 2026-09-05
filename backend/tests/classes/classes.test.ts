@@ -32,10 +32,6 @@ beforeAll(async () => {
         title: `Tecelagem ${marker}`,
         category: "Têxtil",
         description: "Oficina usada para validar turmas com várias aulas.",
-        startsAt: futureDate(10),
-        durationMin: 120,
-        capacity: 20,
-        location: "Ateliê de testes",
       },
     }),
   ]);
@@ -45,7 +41,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.enrollment.deleteMany({ where: { workshopId } });
+  await prisma.enrollment.deleteMany({ where: { class: { workshopId } } });
   await prisma.workshop.delete({ where: { id: workshopId } });
   await prisma.user.delete({ where: { id: adminId } });
   await prisma.$disconnect();
@@ -121,7 +117,8 @@ describe("workshop classes", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(response.body.data).toMatchObject({ classId, workshopId });
+    expect(response.body.data).toMatchObject({ classId });
+    expect(response.body.data).not.toHaveProperty("workshopId");
   });
 
   it("calculates occupancy and prevents capacity below occupied seats", async () => {
@@ -130,13 +127,11 @@ describe("workshop classes", () => {
         {
           name: "Primeira participante",
           email: `class-participant-1-${marker}@example.com`,
-          workshopId,
           classId,
         },
         {
           name: "Segunda participante",
           email: `class-participant-2-${marker}@example.com`,
-          workshopId,
           classId,
         },
       ],

@@ -190,20 +190,21 @@ async function run() {
   const savedWorkshops = [];
 
   for (const [workshopIndex, workshop] of workshops.entries()) {
+    const { startsAt, durationMin, capacity, location, ...workshopData } = workshop;
     const existingWorkshop = await prisma.workshop.findFirst({
       where: { title: workshop.title },
     });
 
     const savedWorkshop = existingWorkshop
-      ? await prisma.workshop.update({ where: { id: existingWorkshop.id }, data: workshop })
-      : await prisma.workshop.create({ data: workshop });
+      ? await prisma.workshop.update({ where: { id: existingWorkshop.id }, data: workshopData })
+      : await prisma.workshop.create({ data: workshopData });
 
     savedWorkshops.push(savedWorkshop);
 
     await prisma.workshopClass.upsert({
       where: { id: savedWorkshop.id },
       update: {
-        capacity: workshop.capacity,
+        capacity,
         price: workshopIndex % 3 === 0 ? 120 : workshopIndex % 3 === 1 ? 85.5 : 0,
         active: workshop.active,
       },
@@ -211,7 +212,7 @@ async function run() {
         id: savedWorkshop.id,
         workshopId: savedWorkshop.id,
         name: "Turma inicial",
-        capacity: workshop.capacity,
+        capacity,
         price: workshopIndex % 3 === 0 ? 120 : workshopIndex % 3 === 1 ? 85.5 : 0,
         active: workshop.active,
       },
@@ -220,35 +221,35 @@ async function run() {
     await prisma.classMeeting.upsert({
       where: { id: savedWorkshop.id },
       update: {
-        startsAt: workshop.startsAt,
-        endsAt: new Date(workshop.startsAt.getTime() + workshop.durationMin * 60_000),
-        location: workshop.location,
+        startsAt,
+        endsAt: new Date(startsAt.getTime() + durationMin * 60_000),
+        location,
       },
       create: {
         id: savedWorkshop.id,
         classId: savedWorkshop.id,
-        startsAt: workshop.startsAt,
-        endsAt: new Date(workshop.startsAt.getTime() + workshop.durationMin * 60_000),
-        location: workshop.location,
+        startsAt,
+        endsAt: new Date(startsAt.getTime() + durationMin * 60_000),
+        location,
       },
     });
 
     if (workshopIndex === 0) {
-      const secondMeetingStart = new Date(workshop.startsAt.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const secondMeetingStart = new Date(startsAt.getTime() + 2 * 24 * 60 * 60 * 1000);
       await prisma.classMeeting.upsert({
         where: { id: "00000000-0000-4000-8000-000000000001" },
         update: {
           classId: savedWorkshop.id,
           startsAt: secondMeetingStart,
-          endsAt: new Date(secondMeetingStart.getTime() + workshop.durationMin * 60_000),
-          location: workshop.location,
+          endsAt: new Date(secondMeetingStart.getTime() + durationMin * 60_000),
+          location,
         },
         create: {
           id: "00000000-0000-4000-8000-000000000001",
           classId: savedWorkshop.id,
           startsAt: secondMeetingStart,
-          endsAt: new Date(secondMeetingStart.getTime() + workshop.durationMin * 60_000),
-          location: workshop.location,
+          endsAt: new Date(secondMeetingStart.getTime() + durationMin * 60_000),
+          location,
         },
       });
     }
@@ -264,7 +265,7 @@ async function run() {
     await prisma.enrollment.upsert({
       where: { email_classId: { email, classId: workshop.id } },
       update: { name, status, classId: workshop.id },
-      create: { name, email, status, workshopId: workshop.id, classId: workshop.id },
+      create: { name, email, status, classId: workshop.id },
     });
   }
 }

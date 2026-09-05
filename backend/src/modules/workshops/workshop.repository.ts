@@ -2,26 +2,25 @@ import { EnrollmentStatus, type Prisma } from "@prisma/client";
 import { prisma } from "../../config/database.js";
 import type { CreateWorkshopInput, ListWorkshopsQuery, UpdateWorkshopInput } from "./workshop.schemas.js";
 
-const occupiedEnrollmentFilter = {
-  status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
-};
-
 const classSummaryInclude = {
   meetings: { orderBy: { startsAt: "asc" as const } },
-  _count: { select: { enrollments: { where: occupiedEnrollmentFilter } } },
+  enrollments: { select: { status: true } },
 };
 
 type WorkshopWithClasses = Prisma.WorkshopGetPayload<{
   include: { classes: { include: typeof classSummaryInclude } };
 }>;
 
-function withoutLegacyFields(workshop: WorkshopWithClasses) {
-  const { startsAt: _startsAt, durationMin: _durationMin, capacity: _capacity, location: _location, classes, ...data } = workshop;
+function withoutLegacyFields(workshop: WorkshopWithClasses, includeEnrollmentCount = false) {
+  const { classes, ...data } = workshop;
   const nextMeetingAt = classes
     .flatMap((workshopClass) => workshopClass.meetings)
     .filter((meeting) => meeting.startsAt > new Date())
     .sort((first, second) => first.startsAt.getTime() - second.startsAt.getTime())[0]?.startsAt ?? null;
-  const occupiedSeats = classes.reduce((total, workshopClass) => total + workshopClass._count.enrollments, 0);
+  const occupiedSeats = classes.reduce(
+    (total, workshopClass) => total + workshopClass.enrollments.filter((enrollment) => enrollment.status !== EnrollmentStatus.CANCELADA).length,
+    0,
+  );
   const totalCapacity = classes.reduce((total, workshopClass) => total + workshopClass.capacity, 0);
 
   return {
@@ -31,6 +30,9 @@ function withoutLegacyFields(workshop: WorkshopWithClasses) {
     totalCapacity,
     occupiedSeats,
     availableSeats: Math.max(totalCapacity - occupiedSeats, 0),
+    ...(includeEnrollmentCount
+      ? { enrollmentCount: classes.reduce((total, workshopClass) => total + workshopClass.enrollments.length, 0) }
+      : {}),
   };
 }
 
@@ -48,7 +50,7 @@ export const workshopRepository = {
     });
 
     return workshops
-      .map(withoutLegacyFields)
+      .map((workshop) => withoutLegacyFields(workshop))
       .sort((first, second) => first.nextMeetingAt!.getTime() - second.nextMeetingAt!.getTime());
   },
 
@@ -84,7 +86,7 @@ export const workshopRepository = {
     const [items, totalItems] = await prisma.$transaction([
       prisma.workshop.findMany({
         where,
-        include: { classes: { include: classSummaryInclude }, _count: { select: { enrollments: true } } },
+        include: { classes: { include: classSummaryInclude } },
         orderBy: { createdAt: "desc" },
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
@@ -93,10 +95,7 @@ export const workshopRepository = {
     ]);
 
     return {
-      items: items.map(({ _count, ...workshop }) => ({
-        ...withoutLegacyFields(workshop),
-        enrollmentCount: _count.enrollments,
-      })),
+      items: items.map((workshop) => withoutLegacyFields(workshop, true)),
       totalItems,
     };
   },
@@ -109,10 +108,6 @@ export const workshopRepository = {
     const workshop = await prisma.workshop.create({
       data: {
         ...data,
-        startsAt: new Date(),
-        durationMin: 30,
-        capacity: 1,
-        location: "Definido por turma",
       },
       include: { classes: { include: classSummaryInclude } },
     });

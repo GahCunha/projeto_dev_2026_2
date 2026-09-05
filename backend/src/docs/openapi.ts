@@ -165,7 +165,7 @@ export const openApiDocument = {
       },
       Enrollment: {
         type: "object",
-        required: ["id", "name", "email", "status", "paymentStatus", "workshopId", "classId", "createdAt", "updatedAt"],
+        required: ["id", "name", "email", "status", "paymentStatus", "classId", "createdAt", "updatedAt"],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
@@ -180,7 +180,6 @@ export const openApiDocument = {
             enum: ["ISENTO", "PENDENTE", "PAGO"],
             example: "PENDENTE",
           },
-          workshopId: { type: "string", format: "uuid" },
           classId: { type: "string", format: "uuid" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
@@ -191,25 +190,25 @@ export const openApiDocument = {
           { $ref: "#/components/schemas/Enrollment" },
           {
             type: "object",
-            required: ["workshop"],
+            required: ["workshop", "class"],
             properties: {
               workshop: {
                 type: "object",
-                required: ["id", "title", "startsAt", "active"],
+                required: ["id", "title", "active"],
                 properties: {
                   id: { type: "string", format: "uuid" },
                   title: { type: "string", example: "Crochê: primeiros pontos" },
-                  startsAt: { type: "string", format: "date-time" },
                   active: { type: "boolean" },
                 },
               },
+              class: { $ref: "#/components/schemas/WorkshopClass" },
             },
           },
         ],
       },
       EnrollmentCancellation: {
         type: "object",
-        required: ["id", "name", "status", "workshop"],
+        required: ["id", "name", "status", "paymentStatus", "workshop", "class"],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
@@ -217,13 +216,21 @@ export const openApiDocument = {
             type: "string",
             enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
           },
+          paymentStatus: { type: "string", enum: ["ISENTO", "PENDENTE", "PAGO"] },
           workshop: {
             type: "object",
-            required: ["title", "startsAt", "location"],
+            required: ["title"],
             properties: {
               title: { type: "string", example: "Crochê: primeiros pontos" },
-              startsAt: { type: "string", format: "date-time" },
-              location: { type: "string", example: "Ateliê Têxtil, sala 2" },
+            },
+          },
+          class: {
+            type: "object",
+            required: ["name", "price", "meetings"],
+            properties: {
+              name: { type: "string" },
+              price: { type: "number", format: "decimal" },
+              meetings: { type: "array", items: { $ref: "#/components/schemas/ClassMeeting" } },
             },
           },
         },
@@ -275,12 +282,6 @@ export const openApiDocument = {
             example: "maria@example.com",
           },
           classId: { type: "string", format: "uuid" },
-          workshopId: {
-            type: "string",
-            format: "uuid",
-            deprecated: true,
-            description: "Resumo calculado a partir de todas as turmas da oficina.",
-          },
         },
       },
       CreateWorkshopInput: {
