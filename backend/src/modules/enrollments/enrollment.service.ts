@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { EnrollmentStatus, Prisma } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { env } from "../../config/environment.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { emailService } from "../../shared/email/email.service.js";
@@ -22,6 +22,40 @@ function hashCancellationToken(token: string) {
 
 function cancellationUrl(token: string) {
   return `${env.FRONTEND_URL.replace(/\/$/, "")}/inscricoes/cancelar/${token}`;
+}
+
+function paymentUrl(token: string) {
+  return `${env.FRONTEND_URL.replace(/\/$/, "")}/inscricoes/pagamento/${token}`;
+}
+
+function enrollmentEmailData(enrollment: Awaited<ReturnType<typeof enrollmentRepository.findById>>) {
+  if (!enrollment) return null;
+
+  return {
+    name: enrollment.name,
+    email: enrollment.email,
+    workshop: {
+      title: enrollment.workshop.title,
+      className: enrollment.class?.name ?? "Turma inicial",
+      price: enrollment.class?.price ?? 0,
+      meetings: enrollment.class?.meetings ?? [{
+        startsAt: enrollment.workshop.startsAt,
+        endsAt: enrollment.workshop.startsAt,
+        location: enrollment.workshop.location,
+      }],
+    },
+  };
+}
+
+function publicPayment(enrollment: NonNullable<Awaited<ReturnType<typeof enrollmentRepository.findByPaymentTokenHash>>>) {
+  return {
+    name: enrollment.name,
+    status: enrollment.status,
+    paymentStatus: enrollment.paymentStatus,
+    paidAt: enrollment.paidAt,
+    workshop: enrollment.workshop,
+    class: enrollment.class,
+  };
 }
 
 export const enrollmentService = {
@@ -60,13 +94,8 @@ export const enrollmentService = {
     }
 
     const enrollmentWithEmail = await enrollmentRepository.findById(enrollment.id);
-    if (enrollmentWithEmail) {
-      await emailService.sendEnrollmentCanceled({
-        name: enrollmentWithEmail.name,
-        email: enrollmentWithEmail.email,
-        workshop: enrollmentWithEmail.workshop,
-      });
-    }
+    const emailData = enrollmentEmailData(enrollmentWithEmail);
+    if (emailData) await emailService.sendEnrollmentCanceled(emailData);
 
     return canceledEnrollment;
   },
@@ -90,6 +119,17 @@ export const enrollmentService = {
       );
     }
 
+    if (
+      input.status === EnrollmentStatus.CONFIRMADA
+      && enrollment.paymentStatus === PaymentStatus.PENDENTE
+    ) {
+      throw new AppError(
+        "A inscrição só pode ser confirmada depois do pagamento.",
+        409,
+        "PAYMENT_REQUIRED",
+      );
+    }
+
     const updatedEnrollment = await enrollmentRepository.updateStatus(
       id,
       enrollment.status,
@@ -104,11 +144,8 @@ export const enrollmentService = {
       );
     }
 
-    const emailData = {
-      name: enrollment.name,
-      email: enrollment.email,
-      workshop: enrollment.workshop,
-    };
+    const emailData = enrollmentEmailData(enrollment);
+    if (!emailData) throw new AppError("Inscrição não encontrada.", 404, "ENROLLMENT_NOT_FOUND");
 
     if (input.status === EnrollmentStatus.CONFIRMADA) {
       await emailService.sendEnrollmentConfirmed(emailData);
@@ -117,6 +154,54 @@ export const enrollmentService = {
     }
 
     return updatedEnrollment;
+  },
+
+  async getPayment(token: string) {
+    const enrollment = await enrollmentRepository.findByPaymentTokenHash(hashCancellationToken(token));
+    if (!enrollment) {
+      throw new AppError("Link de pagamento inválido ou expirado.", 404, "PAYMENT_NOT_FOUND");
+    }
+
+    return publicPayment(enrollment);
+  },
+
+  async simulatePayment(token: string) {
+    const tokenHash = hashCancellationToken(token);
+    const enrollment = await enrollmentRepository.findByPaymentTokenHash(tokenHash);
+
+    if (!enrollment) {
+      throw new AppError("Link de pagamento inválido ou expirado.", 404, "PAYMENT_NOT_FOUND");
+    }
+    if (enrollment.status === EnrollmentStatus.CANCELADA) {
+      throw new AppError("Não é possível pagar uma inscrição cancelada.", 409, "ENROLLMENT_CANCELED");
+    }
+    if (enrollment.paymentStatus === PaymentStatus.PAGO) {
+      throw new AppError("Este pagamento já foi registrado.", 409, "PAYMENT_ALREADY_PAID");
+    }
+
+    const paidEnrollment = await enrollmentRepository.markPaymentAsPaid(tokenHash);
+    if (!paidEnrollment) {
+      throw new AppError("O pagamento foi alterado por outra operação.", 409, "PAYMENT_CONFLICT");
+    }
+
+    if (paidEnrollment.class) {
+      const emailData = {
+        name: paidEnrollment.name,
+        email: paidEnrollment.email,
+        workshop: {
+          title: paidEnrollment.workshop.title,
+          className: paidEnrollment.class.name,
+          price: paidEnrollment.class.price,
+          meetings: paidEnrollment.class.meetings,
+        },
+      };
+      await Promise.all([
+        emailService.sendPaymentReceived(emailData),
+        emailService.sendPaymentNotificationToAdmin(emailData),
+      ]);
+    }
+
+    return publicPayment(paidEnrollment);
   },
 
   async list(query: ListEnrollmentsQuery) {
@@ -136,9 +221,11 @@ export const enrollmentService = {
   async create(data: CreateEnrollmentInput) {
     try {
       const cancellationToken = randomBytes(32).toString("hex");
+      const paymentToken = randomBytes(32).toString("hex");
       const reservation = await enrollmentRepository.createWithSeatReservation(
         data,
         hashCancellationToken(cancellationToken),
+        hashCancellationToken(paymentToken),
       );
 
       if (reservation.outcome === "unavailable") {
@@ -159,9 +246,13 @@ export const enrollmentService = {
         email: enrollment.email,
         workshop: {
           title: workshop.title,
-          startsAt: workshop.startsAt,
-          location: workshop.location,
+          className: workshop.className,
+          price: workshop.price,
+          meetings: workshop.meetings,
         },
+        paymentUrl: enrollment.paymentStatus === PaymentStatus.PENDENTE
+          ? paymentUrl(paymentToken)
+          : undefined,
         cancellationUrl: cancellationUrl(cancellationToken),
       });
 

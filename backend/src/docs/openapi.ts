@@ -164,7 +164,7 @@ export const openApiDocument = {
       },
       Enrollment: {
         type: "object",
-        required: ["id", "name", "email", "status", "workshopId", "classId", "createdAt", "updatedAt"],
+        required: ["id", "name", "email", "status", "paymentStatus", "workshopId", "classId", "createdAt", "updatedAt"],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
@@ -172,6 +172,11 @@ export const openApiDocument = {
           status: {
             type: "string",
             enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
+            example: "PENDENTE",
+          },
+          paymentStatus: {
+            type: "string",
+            enum: ["ISENTO", "PENDENTE", "PAGO"],
             example: "PENDENTE",
           },
           workshopId: { type: "string", format: "uuid" },
@@ -220,6 +225,21 @@ export const openApiDocument = {
               location: { type: "string", example: "Ateliê Têxtil, sala 2" },
             },
           },
+        },
+      },
+      EnrollmentPayment: {
+        type: "object",
+        required: ["name", "status", "paymentStatus", "workshop", "class"],
+        properties: {
+          name: { type: "string", example: "Maria Artesã" },
+          status: { type: "string", enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"] },
+          paymentStatus: { type: "string", enum: ["PENDENTE", "PAGO"] },
+          paidAt: { type: "string", format: "date-time", nullable: true },
+          workshop: {
+            type: "object",
+            properties: { title: { type: "string" } },
+          },
+          class: { $ref: "#/components/schemas/WorkshopClass" },
         },
       },
       Pagination: {
@@ -589,6 +609,35 @@ export const openApiDocument = {
               "application/json": { schema: { $ref: "#/components/schemas/Error" } },
             },
           },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+    },
+    "/api/inscricoes/pagamento/{token}": {
+      get: {
+        tags: ["Inscrições"],
+        summary: "Consulta uma cobrança PIX ilustrativa",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string", pattern: "^[a-f0-9]{64}$" } }],
+        responses: {
+          "200": {
+            description: "Dados seguros da cobrança",
+            content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/EnrollmentPayment" } } } } },
+          },
+          "404": { description: "Link inválido ou desconhecido", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "422": { $ref: "#/components/responses/InvalidData" },
+        },
+      },
+      post: {
+        tags: ["Inscrições"],
+        summary: "Simula o pagamento PIX sem movimentação financeira real",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string", pattern: "^[a-f0-9]{64}$" } }],
+        responses: {
+          "200": {
+            description: "Pagamento marcado como pago; inscrição permanece pendente",
+            content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/EnrollmentPayment" } } } } },
+          },
+          "404": { description: "Link inválido ou desconhecido", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "409": { description: "Pagamento já registrado ou inscrição cancelada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },

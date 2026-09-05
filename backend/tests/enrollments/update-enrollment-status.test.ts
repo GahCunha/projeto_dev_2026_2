@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { EnrollmentStatus } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -14,6 +14,7 @@ let adminId: string;
 let workshopId: string;
 let pendingEnrollmentId: string;
 let canceledEnrollmentId: string;
+let unpaidEnrollmentId: string;
 
 beforeAll(async () => {
   const admin = await prisma.user.create({
@@ -53,10 +54,36 @@ beforeAll(async () => {
     }),
   ]);
 
+  const paidClass = await prisma.workshopClass.create({
+    data: {
+      workshopId: workshop.id,
+      name: "Turma paga",
+      capacity: 10,
+      price: 50,
+      meetings: {
+        create: {
+          startsAt: workshop.startsAt,
+          endsAt: new Date(workshop.startsAt.getTime() + 7_200_000),
+          location: workshop.location,
+        },
+      },
+    },
+  });
+  const unpaidEnrollment = await prisma.enrollment.create({
+    data: {
+      name: "Pessoa sem pagamento",
+      email: `unpaid-${marker}@example.com`,
+      workshopId: workshop.id,
+      classId: paidClass.id,
+      paymentStatus: PaymentStatus.PENDENTE,
+    },
+  });
+
   adminId = admin.id;
   workshopId = workshop.id;
   pendingEnrollmentId = pendingEnrollment.id;
   canceledEnrollmentId = canceledEnrollment.id;
+  unpaidEnrollmentId = unpaidEnrollment.id;
 });
 
 afterAll(async () => {
@@ -135,6 +162,16 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
 
     expect(response.status).toBe(409);
     expect(response.body.error).toBe("INVALID_STATUS_TRANSITION");
+  });
+
+  it("does not confirm a paid enrollment before payment", async () => {
+    const agent = await authenticatedAgent();
+    const response = await agent
+      .patch(`/api/admin/inscricoes/${unpaidEnrollmentId}/status`)
+      .send({ status: EnrollmentStatus.CONFIRMADA });
+
+    expect(response.status).toBe(409);
+    expect(response.body.error).toBe("PAYMENT_REQUIRED");
   });
 
   it("rejects setting the status already assigned", async () => {

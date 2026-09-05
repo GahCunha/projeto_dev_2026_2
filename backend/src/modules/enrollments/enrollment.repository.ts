@@ -1,4 +1,4 @@
-import { EnrollmentStatus, Prisma } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../config/database.js";
 import type {
   CreateEnrollmentInput,
@@ -16,7 +16,11 @@ export const enrollmentRepository = {
     });
   },
 
-  createWithSeatReservation(data: CreateEnrollmentInput, cancellationTokenHash: string) {
+  createWithSeatReservation(
+    data: CreateEnrollmentInput,
+    cancellationTokenHash: string,
+    paymentTokenHash: string,
+  ) {
     return prisma.$transaction(async (transaction) => {
       let classId = data.classId;
 
@@ -92,6 +96,10 @@ export const enrollmentRepository = {
           workshopId: workshopClass.workshopId,
           classId: workshopClass.id,
           status: EnrollmentStatus.PENDENTE,
+          paymentStatus: workshopClass.price.greaterThan(0)
+            ? PaymentStatus.PENDENTE
+            : PaymentStatus.ISENTO,
+          paymentTokenHash: workshopClass.price.greaterThan(0) ? paymentTokenHash : null,
           cancellationTokenHash,
         },
         select: {
@@ -99,6 +107,7 @@ export const enrollmentRepository = {
           name: true,
           email: true,
           status: true,
+          paymentStatus: true,
           workshopId: true,
           classId: true,
           createdAt: true,
@@ -111,8 +120,9 @@ export const enrollmentRepository = {
         enrollment,
         workshop: {
           title: workshopClass.workshop.title,
-          startsAt: firstFutureMeeting.startsAt,
-          location: firstFutureMeeting.location,
+          className: workshopClass.name,
+          price: workshopClass.price,
+          meetings: workshopClass.meetings,
         },
       } as const;
     });
@@ -126,8 +136,16 @@ export const enrollmentRepository = {
         name: true,
         email: true,
         status: true,
+        paymentStatus: true,
         workshopId: true,
         classId: true,
+        class: {
+          select: {
+            name: true,
+            price: true,
+            meetings: { orderBy: { startsAt: "asc" } },
+          },
+        },
         workshop: {
           select: { title: true, startsAt: true, location: true },
         },
@@ -142,11 +160,55 @@ export const enrollmentRepository = {
         id: true,
         name: true,
         status: true,
+        paymentStatus: true,
         workshop: {
           select: { title: true, startsAt: true, location: true },
         },
+        class: {
+          select: {
+            name: true,
+            price: true,
+            meetings: { orderBy: { startsAt: "asc" } },
+          },
+        },
       },
     });
+  },
+
+  findByPaymentTokenHash(paymentTokenHash: string) {
+    return prisma.enrollment.findUnique({
+      where: { paymentTokenHash },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        paymentStatus: true,
+        paidAt: true,
+        workshop: { select: { title: true } },
+        class: {
+          select: {
+            name: true,
+            price: true,
+            meetings: { orderBy: { startsAt: "asc" } },
+          },
+        },
+      },
+    });
+  },
+
+  async markPaymentAsPaid(paymentTokenHash: string) {
+    const result = await prisma.enrollment.updateMany({
+      where: {
+        paymentTokenHash,
+        paymentStatus: PaymentStatus.PENDENTE,
+        status: { not: EnrollmentStatus.CANCELADA },
+      },
+      data: { paymentStatus: PaymentStatus.PAGO, paidAt: new Date() },
+    });
+
+    if (result.count === 0) return null;
+    return this.findByPaymentTokenHash(paymentTokenHash);
   },
 
   async cancelByCancellationTokenHash(cancellationTokenHash: string) {
@@ -183,6 +245,7 @@ export const enrollmentRepository = {
         name: true,
         email: true,
         status: true,
+        paymentStatus: true,
         workshopId: true,
         createdAt: true,
         updatedAt: true,
@@ -211,6 +274,8 @@ export const enrollmentRepository = {
           name: true,
           email: true,
           status: true,
+          paymentStatus: true,
+          paidAt: true,
           workshopId: true,
           classId: true,
           class: {

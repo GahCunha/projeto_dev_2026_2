@@ -3,6 +3,8 @@ import {
   cancelEnrollment,
   createEnrollment,
   getEnrollmentCancellation,
+  getEnrollmentPayment,
+  simulateEnrollmentPayment,
 } from "./enrollment.controller.js";
 
 export const publicEnrollmentRoutes = Router();
@@ -10,3 +12,5 @@ export const publicEnrollmentRoutes = Router();
 publicEnrollmentRoutes.post("/", createEnrollment);
 publicEnrollmentRoutes.get("/cancelamento/:token", getEnrollmentCancellation);
 publicEnrollmentRoutes.post("/cancelamento/:token", cancelEnrollment);
+publicEnrollmentRoutes.get("/pagamento/:token", getEnrollmentPayment);
+publicEnrollmentRoutes.post("/pagamento/:token", simulateEnrollmentPayment);

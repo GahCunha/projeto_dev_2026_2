@@ -4,6 +4,7 @@ import {
   cancellationTokenParamsSchema,
   enrollmentParamsSchema,
   listEnrollmentsQuerySchema,
+  paymentTokenParamsSchema,
   updateEnrollmentStatusSchema,
 } from "./enrollment.schemas.js";
 import { enrollmentService } from "./enrollment.service.js";
@@ -40,6 +41,20 @@ export const getEnrollmentCancellation: RequestHandler = async (req, res) => {
 export const cancelEnrollment: RequestHandler = async (req, res) => {
   const { token } = cancellationTokenParamsSchema.parse(req.params);
   const enrollment = await enrollmentService.cancelWithToken(token);
+
+  res.json({ data: enrollment });
+};
+
+export const getEnrollmentPayment: RequestHandler = async (req, res) => {
+  const { token } = paymentTokenParamsSchema.parse(req.params);
+  const enrollment = await enrollmentService.getPayment(token);
+
+  res.json({ data: enrollment });
+};
+
+export const simulateEnrollmentPayment: RequestHandler = async (req, res) => {
+  const { token } = paymentTokenParamsSchema.parse(req.params);
+  const enrollment = await enrollmentService.simulatePayment(token);
 
   res.json({ data: enrollment });
 };
