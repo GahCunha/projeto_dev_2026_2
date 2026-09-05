@@ -58,6 +58,8 @@ O mesmo e-mail não poderá se inscrever duas vezes na mesma oficina. A restriç
 
 Inscrições `PENDENTE` e `CONFIRMADA` ocupam vaga. Uma vaga volta a ficar disponível somente quando a inscrição é `CANCELADA`. Preferimos não receber mais solicitações do que a capacidade anunciada comporta.
 
+Na criação, a API abre uma transação e bloqueia somente a linha da oficina consultada enquanto conta a ocupação e grava a inscrição. Requisições para oficinas diferentes continuam independentes; tentativas simultâneas para a última vaga da mesma oficina são serializadas, e apenas uma recebe sucesso.
+
 ### Transições de status
 
 Uma inscrição `PENDENTE` pode passar para `CONFIRMADA` ou `CANCELADA`, e uma inscrição `CONFIRMADA` pode passar para `CANCELADA`. Uma inscrição cancelada não pode ser reaberta e nenhuma inscrição volta para `PENDENTE`. Como a pendência já reserva uma vaga, a confirmação não altera a ocupação. A atualização também compara o status atual no banco para detectar alterações concorrentes.

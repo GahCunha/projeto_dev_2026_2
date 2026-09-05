@@ -16,22 +16,60 @@ export const enrollmentRepository = {
     });
   },
 
-  create(data: CreateEnrollmentInput, cancellationTokenHash: string) {
-    return prisma.enrollment.create({
-      data: {
-        ...data,
-        status: EnrollmentStatus.PENDENTE,
-        cancellationTokenHash,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        workshopId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+  createWithSeatReservation(data: CreateEnrollmentInput, cancellationTokenHash: string) {
+    return prisma.$transaction(async (transaction) => {
+      const lockedWorkshops = await transaction.$queryRaw<Array<{ id: string }>>`
+        SELECT "id"
+        FROM "oficinas"
+        WHERE "id" = ${data.workshopId}
+        FOR UPDATE
+      `;
+
+      if (lockedWorkshops.length === 0) return { outcome: "unavailable" } as const;
+
+      const workshop = await transaction.workshop.findUnique({
+        where: { id: data.workshopId },
+        select: {
+          id: true,
+          title: true,
+          startsAt: true,
+          location: true,
+          active: true,
+          capacity: true,
+        },
+      });
+
+      if (!workshop || !workshop.active || workshop.startsAt <= new Date()) {
+        return { outcome: "unavailable" } as const;
+      }
+
+      const occupiedSeats = await transaction.enrollment.count({
+        where: {
+          workshopId: workshop.id,
+          status: { not: EnrollmentStatus.CANCELADA },
+        },
+      });
+
+      if (occupiedSeats >= workshop.capacity) return { outcome: "full" } as const;
+
+      const enrollment = await transaction.enrollment.create({
+        data: {
+          ...data,
+          status: EnrollmentStatus.PENDENTE,
+          cancellationTokenHash,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          workshopId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return { outcome: "created", enrollment, workshop } as const;
     });
   },
 

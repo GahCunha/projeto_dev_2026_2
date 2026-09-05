@@ -3,7 +3,6 @@ import { EnrollmentStatus, Prisma } from "@prisma/client";
 import { env } from "../../config/environment.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { emailService } from "../../shared/email/email.service.js";
-import { workshopRepository } from "../workshops/workshop.repository.js";
 import { enrollmentRepository } from "./enrollment.repository.js";
 import type {
   CreateEnrollmentInput,
@@ -135,28 +134,26 @@ export const enrollmentService = {
   },
 
   async create(data: CreateEnrollmentInput) {
-    const workshop = await workshopRepository.findById(data.workshopId);
-
-    if (!workshop || !workshop.active || workshop.startsAt <= new Date()) {
-      throw new AppError(
-        "Oficina não encontrada ou indisponível para inscrições.",
-        422,
-        "WORKSHOP_UNAVAILABLE",
-      );
-    }
-
-    const occupiedSeats = await enrollmentRepository.countActiveByWorkshop(workshop.id);
-
-    if (occupiedSeats >= workshop.capacity) {
-      throw new AppError("Não há vagas disponíveis nesta oficina.", 409, "WORKSHOP_FULL");
-    }
-
     try {
       const cancellationToken = randomBytes(32).toString("hex");
-      const enrollment = await enrollmentRepository.create(
+      const reservation = await enrollmentRepository.createWithSeatReservation(
         data,
         hashCancellationToken(cancellationToken),
       );
+
+      if (reservation.outcome === "unavailable") {
+        throw new AppError(
+          "Oficina não encontrada ou indisponível para inscrições.",
+          422,
+          "WORKSHOP_UNAVAILABLE",
+        );
+      }
+
+      if (reservation.outcome === "full") {
+        throw new AppError("Não há vagas disponíveis nesta oficina.", 409, "WORKSHOP_FULL");
+      }
+
+      const { enrollment, workshop } = reservation;
       await emailService.sendEnrollmentReceived({
         name: enrollment.name,
         email: enrollment.email,

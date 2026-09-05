@@ -10,6 +10,7 @@ const workshopIds: string[] = [];
 let availableWorkshopId: string;
 let inactiveWorkshopId: string;
 let fullWorkshopId: string;
+let concurrentWorkshopId: string;
 
 function futureDate() {
   const date = new Date();
@@ -20,7 +21,7 @@ function futureDate() {
 beforeAll(async () => {
   const suffix = randomUUID();
 
-  const [availableWorkshop, inactiveWorkshop, fullWorkshop] = await Promise.all([
+  const [availableWorkshop, inactiveWorkshop, fullWorkshop, concurrentWorkshop] = await Promise.all([
     prisma.workshop.create({
       data: {
         title: `Oficina disponível ${suffix}`,
@@ -52,12 +53,23 @@ beforeAll(async () => {
         location: "Sala de testes",
       },
     }),
+    prisma.workshop.create({
+      data: {
+        title: `Oficina concorrida ${suffix}`,
+        description: "Oficina criada para testar duas inscrições simultâneas.",
+        startsAt: futureDate(),
+        durationMin: 120,
+        capacity: 1,
+        location: "Sala de testes",
+      },
+    }),
   ]);
 
   availableWorkshopId = availableWorkshop.id;
   inactiveWorkshopId = inactiveWorkshop.id;
   fullWorkshopId = fullWorkshop.id;
-  workshopIds.push(availableWorkshopId, inactiveWorkshopId, fullWorkshopId);
+  concurrentWorkshopId = concurrentWorkshop.id;
+  workshopIds.push(availableWorkshopId, inactiveWorkshopId, fullWorkshopId, concurrentWorkshopId);
 });
 
 afterAll(async () => {
@@ -154,5 +166,31 @@ describe("POST /api/inscricoes", () => {
 
     expect(fullResponse.status).toBe(409);
     expect(fullResponse.body.error).toBe("WORKSHOP_FULL");
+  });
+
+  it("allows only one enrollment to take the last seat under concurrent requests", async () => {
+    const [firstResponse, secondResponse] = await Promise.all([
+      request(app).post("/api/inscricoes").send({
+        name: "Pessoa Concorrente Um",
+        email: `concurrent-1-${randomUUID()}@example.com`,
+        workshopId: concurrentWorkshopId,
+      }),
+      request(app).post("/api/inscricoes").send({
+        name: "Pessoa Concorrente Dois",
+        email: `concurrent-2-${randomUUID()}@example.com`,
+        workshopId: concurrentWorkshopId,
+      }),
+    ]);
+
+    expect([firstResponse.status, secondResponse.status].sort()).toEqual([201, 409]);
+    expect([firstResponse.body.error, secondResponse.body.error]).toContain("WORKSHOP_FULL");
+
+    const occupiedSeats = await prisma.enrollment.count({
+      where: {
+        workshopId: concurrentWorkshopId,
+        status: { not: EnrollmentStatus.CANCELADA },
+      },
+    });
+    expect(occupiedSeats).toBe(1);
   });
 });

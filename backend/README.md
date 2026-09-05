@@ -143,7 +143,7 @@ O status é alterado separadamente:
 
 Uma oficina desativada continua armazenada com suas inscrições, mas deixa de aparecer nas rotas públicas.
 
-A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina.
+A inscrição é recusada quando os dados são inválidos, a oficina está inativa ou encerrada, não há vagas, ou o mesmo e-mail já está inscrito na oficina. A verificação e a reserva da vaga acontecem na mesma transação, com bloqueio da oficina, para impedir que duas requisições simultâneas ocupem a última vaga.
 
 Ao criar uma inscrição, a API gera um token aleatório e armazena somente seu hash. O token original aparece no link enviado por e-mail e permite ao visitante consultar e cancelar apenas a própria inscrição. O cancelamento libera a vaga imediatamente. O hash nunca é retornado nas respostas da API.
 
