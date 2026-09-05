@@ -29,25 +29,21 @@ export function AdminWorkshopCard({ workshop, onEdit, onStatusChange }: AdminWor
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{workshop.description}</p>
 
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-rule/70 pt-4 text-sm">
-          <div className="col-span-2">
-            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Quando</dt>
-            <dd className="mt-1 font-bold text-carbon">{dateFormatter.format(new Date(workshop.startsAt))}</dd>
-          </div>
           <div>
-            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Duração</dt>
-            <dd className="mt-1 text-carbon">{workshop.durationMin} min</dd>
+            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Turmas</dt>
+            <dd className="mt-1 font-bold text-carbon">{workshop.classCount}</dd>
           </div>
           <div>
             <dt className="font-mono text-xs uppercase tracking-wider text-muted">Ocupação</dt>
-            <dd className="mt-1 font-bold tabular-nums text-carbon">{workshop.occupiedSeats} de {workshop.capacity}</dd>
+            <dd className="mt-1 font-bold tabular-nums text-carbon">{workshop.occupiedSeats} de {workshop.totalCapacity}</dd>
           </div>
           <div>
             <dt className="font-mono text-xs uppercase tracking-wider text-muted">Disponíveis</dt>
             <dd className={`mt-1 font-bold tabular-nums ${workshop.availableSeats === 0 ? 'text-danger' : 'text-success'}`}>{workshop.availableSeats}</dd>
           </div>
           <div className="col-span-2">
-            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Local</dt>
-            <dd className="mt-1 text-carbon">{workshop.location}</dd>
+            <dt className="font-mono text-xs uppercase tracking-wider text-muted">Próximo encontro</dt>
+            <dd className="mt-1 text-carbon">{workshop.nextMeetingAt ? dateFormatter.format(new Date(workshop.nextMeetingAt)) : 'Nenhum encontro futuro'}</dd>
           </div>
         </dl>
 

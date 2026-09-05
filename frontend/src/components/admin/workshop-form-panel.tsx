@@ -10,11 +10,8 @@ type WorkshopFormPanelProps = {
   onClose: () => void
 }
 
-type FormState = Omit<WorkshopFormData, 'startsAt' | 'materials' | 'durationMin' | 'capacity'> & {
-  startsAt: string
+type FormState = Omit<WorkshopFormData, 'materials'> & {
   materials: string
-  durationMin: string
-  capacity: string
 }
 
 const emptyForm: FormState = {
@@ -23,16 +20,6 @@ const emptyForm: FormState = {
   description: '',
   imageUrl: null,
   materials: '',
-  startsAt: '',
-  durationMin: '120',
-  capacity: '12',
-  location: '',
-}
-
-function toLocalDateTime(value: string) {
-  const date = new Date(value)
-  const offset = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
 }
 
 export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormPanelProps) {
@@ -42,14 +29,9 @@ export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormP
     description: workshop.description,
     imageUrl: workshop.imageUrl,
     materials: workshop.materials.join('\n'),
-    startsAt: toLocalDateTime(workshop.startsAt),
-    durationMin: String(workshop.durationMin),
-    capacity: String(workshop.capacity),
-    location: workshop.location,
   } : emptyForm)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [minimumDate] = useState(() => toLocalDateTime(new Date(Date.now() + 60_000).toISOString()))
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -80,10 +62,6 @@ export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormP
         description: form.description.trim(),
         imageUrl: form.imageUrl?.trim() || null,
         materials,
-        startsAt: new Date(form.startsAt).toISOString(),
-        durationMin: Number(form.durationMin),
-        capacity: Number(form.capacity),
-        location: form.location.trim(),
       })
     } catch (requestError) {
       setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível salvar a oficina.')
@@ -123,21 +101,9 @@ export function WorkshopFormPanel({ workshop, onSubmit, onClose }: WorkshopFormP
             </FormField>
           </fieldset>
 
-          <fieldset className="grid gap-5 sm:grid-cols-2">
-            <legend className="mb-4 font-display text-lg font-bold text-carbon">Agenda e vagas</legend>
-            <FormField label="Data e horário" id="startsAt">
-              <input className={inputStyles} id="startsAt" type="datetime-local" min={minimumDate} value={form.startsAt} onChange={(event) => updateField('startsAt', event.target.value)} required />
-            </FormField>
-            <FormField label="Local" id="location">
-              <input className={inputStyles} id="location" value={form.location} onChange={(event) => updateField('location', event.target.value)} minLength={3} maxLength={160} required />
-            </FormField>
-            <FormField label="Duração (minutos)" id="durationMin">
-              <input className={inputStyles} id="durationMin" type="number" min={30} max={1440} step={15} value={form.durationMin} onChange={(event) => updateField('durationMin', event.target.value)} required />
-            </FormField>
-            <FormField label="Quantidade de vagas" id="capacity">
-              <input className={inputStyles} id="capacity" type="number" min={1} max={500} value={form.capacity} onChange={(event) => updateField('capacity', event.target.value)} required />
-            </FormField>
-          </fieldset>
+          <div className="border-l-4 border-saffron bg-saffron/10 px-4 py-3 text-sm text-carbon">
+            Datas, locais, valores e vagas são configurados nas turmas depois que a oficina é criada.
+          </div>
 
           <FormField label="Materiais necessários" id="materials" hint="Separe os itens por linha ou vírgula. Máximo de 20.">
             <textarea className={`${inputStyles} min-h-24 resize-y py-3`} id="materials" value={form.materials} onChange={(event) => updateField('materials', event.target.value)} placeholder={'Agulha de crochê\nLinha de algodão'} />

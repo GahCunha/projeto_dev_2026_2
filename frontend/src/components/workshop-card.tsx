@@ -47,11 +47,11 @@ export function WorkshopCard({ workshop, onSelect }: WorkshopCardProps) {
         <dl className="m-0 grid grid-cols-3 gap-4">
           <div className="col-span-2">
             <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Quando</dt>
-            <dd className="m-0">{formatDate(workshop.startsAt)}</dd>
+            <dd className="m-0">{workshop.nextMeetingAt ? formatDate(workshop.nextMeetingAt) : 'Consulte as turmas'}</dd>
           </div>
           <div>
-            <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Duração</dt>
-            <dd className="m-0">{Math.round(workshop.durationMin / 60)}h</dd>
+            <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Turmas</dt>
+            <dd className="m-0">{workshop.classCount}</dd>
           </div>
         </dl>
 

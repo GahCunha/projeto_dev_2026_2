@@ -5,11 +5,11 @@ export type Workshop = {
   description: string
   imageUrl: string | null
   materials: string[]
-  startsAt: string
-  durationMin: number
-  capacity: number
+  nextMeetingAt: string | null
+  classCount: number
+  totalCapacity: number
+  occupiedSeats: number
   availableSeats: number
-  location: string
   active: boolean
   createdAt: string
   updatedAt: string
@@ -19,10 +19,7 @@ export type WorkshopsResponse = {
   data: Workshop[]
 }
 
-export type AdminWorkshop = Workshop & {
-  enrollmentCount: number
-  occupiedSeats: number
-}
+export type AdminWorkshop = Workshop & { enrollmentCount: number }
 
 export type WorkshopFormData = {
   title: string
@@ -30,10 +27,6 @@ export type WorkshopFormData = {
   description: string
   imageUrl: string | null
   materials: string[]
-  startsAt: string
-  durationMin: number
-  capacity: number
-  location: string
 }
 
 export type AdminWorkshopFilters = {

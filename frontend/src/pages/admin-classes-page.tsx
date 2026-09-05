@@ -17,12 +17,13 @@ export function AdminClassesPage() {
   const { workshopId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const workshopTitle = searchParams.get('workshopTitle') ?? 'Oficina selecionada'
+  const isNewWorkshop = searchParams.get('newWorkshop') === 'true'
   const [classes, setClasses] = useState<WorkshopClass[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
-  const [formClass, setFormClass] = useState<WorkshopClass | 'new' | null>(null)
+  const [formClass, setFormClass] = useState<WorkshopClass | 'new' | null>(isNewWorkshop ? 'new' : null)
   const [statusClass, setStatusClass] = useState<WorkshopClass | null>(null)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
@@ -96,6 +97,12 @@ export function AdminClassesPage() {
         </div>
         <Button onClick={() => setFormClass('new')}>Criar turma</Button>
       </div>
+
+      {isNewWorkshop && classes.length === 0 && !isLoading && !error && (
+        <div className="mb-5 border-l-4 border-saffron bg-saffron/10 px-4 py-3 text-sm text-carbon" role="status">
+          Oficina criada. Cadastre sua primeira turma para definir agenda, local, valor e vagas e torná-la visível ao público.
+        </div>
+      )}
 
       {feedback && <div className="mb-5 flex items-center justify-between gap-4 border-l-4 border-success bg-success/10 px-4 py-3 text-sm text-success" role="status"><span>{feedback}</span><button className="font-bold" type="button" onClick={() => setFeedback(null)} aria-label="Fechar mensagem">×</button></div>}
 

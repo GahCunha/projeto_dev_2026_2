@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminPagination } from '../components/admin/admin-pagination'
 import { AdminWorkshopCard } from '../components/admin/admin-workshop-card'
 import { ConfirmationDialog } from '../components/admin/confirmation-dialog'
@@ -17,6 +17,7 @@ import type { AdminWorkshop, WorkshopFormData, WorkshopPagination } from '../typ
 const initialPagination: WorkshopPagination = { page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }
 
 export function AdminWorkshopsPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') ?? ''
   const activeParam = searchParams.get('active')
@@ -89,9 +90,9 @@ export function AdminWorkshopsPage() {
 
   async function saveWorkshop(data: WorkshopFormData) {
     if (formWorkshop === 'new') {
-      await createAdminWorkshop(data)
+      const response = await createAdminWorkshop(data)
       closeForm()
-      refresh('Oficina criada e publicada com sucesso.')
+      navigate(`/admin/oficinas/${response.data.id}/turmas?${new URLSearchParams({ workshopTitle: response.data.title, newWorkshop: 'true' })}`)
       return
     }
     if (formWorkshop) {
@@ -125,7 +126,7 @@ export function AdminWorkshopsPage() {
         <div>
           <p className="mb-2 font-mono text-xs uppercase tracking-wider text-ochre">Catálogo de experiências</p>
           <h1 className="font-display text-3xl font-bold text-carbon sm:text-4xl">Oficinas</h1>
-          <p className="mt-2 text-muted">Organize a agenda e escolha o que está disponível ao público.</p>
+          <p className="mt-2 text-muted">Cadastre as oficinas e organize datas, valores e vagas dentro de cada turma.</p>
         </div>
         <Button onClick={() => setFormWorkshop('new')}>Criar oficina</Button>
       </div>
@@ -135,7 +136,7 @@ export function AdminWorkshopsPage() {
       <form className="mb-5 grid gap-3 border border-rule bg-paper p-4 sm:grid-cols-[1fr_13rem_auto]" onSubmit={handleSearch}>
         <div>
           <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-muted" htmlFor="workshop-search">Buscar oficina</label>
-          <input className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted" id="workshop-search" type="search" placeholder="Título ou local" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
+          <input className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted" id="workshop-search" type="search" placeholder="Título, categoria ou local da turma" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
         </div>
         <div>
           <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-muted" htmlFor="workshop-active">Publicação</label>
@@ -161,7 +162,7 @@ export function AdminWorkshopsPage() {
       )}
 
       {formWorkshop && <WorkshopFormPanel workshop={formWorkshop === 'new' ? undefined : formWorkshop} onSubmit={saveWorkshop} onClose={closeForm} />}
-      {statusWorkshop && <ConfirmationDialog title={`${statusWorkshop.active ? 'Desativar' : 'Ativar'} “${statusWorkshop.title}”?`} description={statusWorkshop.active ? 'Ela deixará de aparecer na área pública, mas as inscrições existentes serão preservadas.' : 'Ela voltará a aparecer na área pública se a data ainda estiver disponível.'} confirmLabel={statusWorkshop.active ? 'Desativar oficina' : 'Ativar oficina'} isSubmitting={isUpdatingStatus} onConfirm={changeStatus} onClose={() => setStatusWorkshop(null)} />}
+      {statusWorkshop && <ConfirmationDialog title={`${statusWorkshop.active ? 'Desativar' : 'Ativar'} “${statusWorkshop.title}”?`} description={statusWorkshop.active ? 'Ela deixará de aparecer na área pública, mas as inscrições existentes serão preservadas.' : 'Ela voltará a aparecer na área pública quando possuir uma turma ativa com encontro futuro.'} confirmLabel={statusWorkshop.active ? 'Desativar oficina' : 'Ativar oficina'} isSubmitting={isUpdatingStatus} onConfirm={changeStatus} onClose={() => setStatusWorkshop(null)} />}
     </div>
   )
 }
