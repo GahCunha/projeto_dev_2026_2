@@ -4,6 +4,7 @@ import { AdminAuthBoundary } from './components/admin/admin-auth-boundary'
 import { ProtectedRoute } from './components/admin/protected-route'
 import { AdminHomePage } from './pages/admin-home-page'
 import { AdminEnrollmentsPage } from './pages/admin-enrollments-page'
+import { AdminClassesPage } from './pages/admin-classes-page'
 import { AdminLoginPage } from './pages/admin-login-page'
 import { AdminWorkshopsPage } from './pages/admin-workshops-page'
 import { PublicHomePage } from './pages/public-home-page'
@@ -21,6 +22,7 @@ function App() {
             <Route index element={<AdminHomePage />} />
             <Route path="inscricoes" element={<AdminEnrollmentsPage />} />
             <Route path="oficinas" element={<AdminWorkshopsPage />} />
+            <Route path="oficinas/:workshopId/turmas" element={<AdminClassesPage />} />
           </Route>
         </Route>
       </Route>

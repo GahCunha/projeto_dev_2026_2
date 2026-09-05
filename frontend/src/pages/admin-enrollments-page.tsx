@@ -26,6 +26,8 @@ export function AdminEnrollmentsPage() {
   const status = statusParam && validStatuses.includes(statusParam) ? statusParam : undefined
   const workshopId = searchParams.get('workshopId') ?? undefined
   const workshopTitle = searchParams.get('workshopTitle') ?? undefined
+  const classId = searchParams.get('classId') ?? undefined
+  const className = searchParams.get('className') ?? undefined
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(search)
@@ -41,7 +43,7 @@ export function AdminEnrollmentsPage() {
   useEffect(() => {
     const controller = new AbortController()
 
-    getAdminEnrollments({ search: search || undefined, status, workshopId, page }, controller.signal)
+    getAdminEnrollments({ search: search || undefined, status, workshopId, classId, page }, controller.signal)
       .then((response) => {
         setEnrollments(response.data)
         setPagination(response.pagination)
@@ -55,7 +57,7 @@ export function AdminEnrollmentsPage() {
       })
 
     return () => controller.abort()
-  }, [page, requestKey, search, status, workshopId])
+  }, [classId, page, requestKey, search, status, workshopId])
 
   function updateFilters(values: { search?: string; status?: EnrollmentStatus | null; page?: number }) {
     const nextParams = new URLSearchParams()
@@ -67,6 +69,8 @@ export function AdminEnrollmentsPage() {
     if (nextStatus) nextParams.set('status', nextStatus)
     if (workshopId) nextParams.set('workshopId', workshopId)
     if (workshopTitle) nextParams.set('workshopTitle', workshopTitle)
+    if (classId) nextParams.set('classId', classId)
+    if (className) nextParams.set('className', className)
     if (nextPage > 1) nextParams.set('page', String(nextPage))
 
     if (nextParams.toString() === searchParams.toString()) return
@@ -115,7 +119,7 @@ export function AdminEnrollmentsPage() {
     }
   }
 
-  const hasFilters = Boolean(search || status || workshopId)
+  const hasFilters = Boolean(search || status || workshopId || classId)
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -135,14 +139,15 @@ export function AdminEnrollmentsPage() {
         </div>
       )}
 
-      {workshopId && (
+      {(workshopId || classId) && (
         <div className="mb-5 flex flex-col gap-3 border-l-4 border-saffron bg-saffron/10 px-4 py-3 text-sm text-carbon sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Inscrições da oficina <strong>{workshopTitle ? `“${workshopTitle}”` : 'selecionada'}</strong>.
+            Inscrições {classId ? 'da turma' : 'da oficina'} <strong>{classId && className ? `“${className}”` : workshopTitle ? `“${workshopTitle}”` : 'selecionada'}</strong>
+            {classId && workshopTitle ? <> da oficina “{workshopTitle}”.</> : '.'}
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <button className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" type="button" onClick={clearFilters}>Limpar filtros</button>
-            <Link className="shrink-0 font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" to="/admin/oficinas">Voltar às oficinas</Link>
+            <Link className="shrink-0 font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4" to={classId && workshopId ? `/admin/oficinas/${workshopId}/turmas?${new URLSearchParams({ workshopTitle: workshopTitle ?? '' })}` : '/admin/oficinas'}>{classId ? 'Voltar às turmas' : 'Voltar às oficinas'}</Link>
           </div>
         </div>
       )}

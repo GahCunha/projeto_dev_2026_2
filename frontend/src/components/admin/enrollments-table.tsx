@@ -35,10 +35,11 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
               <div>
                 <dt className="font-mono text-xs uppercase tracking-wider text-muted">Oficina</dt>
                 <dd className="mt-1 text-sm font-bold text-carbon">{enrollment.workshop.title}</dd>
+                {enrollment.class && <dd className="mt-1 text-sm text-muted">{enrollment.class.name}</dd>}
               </div>
               <div>
-                <dt className="font-mono text-xs uppercase tracking-wider text-muted">Data</dt>
-                <dd className="mt-1 text-sm text-muted">{dateFormatter.format(new Date(enrollment.workshop.startsAt))}</dd>
+                <dt className="font-mono text-xs uppercase tracking-wider text-muted">Próxima aula</dt>
+                <dd className="mt-1 text-sm text-muted">{formatNextMeeting(enrollment)}</dd>
               </div>
             </dl>
             <EnrollmentActions enrollment={enrollment} disabled={updatingEnrollmentId === enrollment.id} onStatusChange={onStatusChange} className="mt-4 border-t border-rule/70 pt-3" />
@@ -53,7 +54,7 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
             <tr className="font-mono text-xs uppercase tracking-wider text-muted">
               <th className="px-5 py-3 font-normal">Participante</th>
               <th className="px-5 py-3 font-normal">Oficina</th>
-              <th className="px-5 py-3 font-normal">Data</th>
+              <th className="px-5 py-3 font-normal">Próxima aula</th>
               <th className="px-5 py-3 font-normal">Status</th>
               <th className="px-5 py-3 text-right font-normal">Ações</th>
             </tr>
@@ -68,10 +69,11 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
                 </td>
                 <td className="px-5 py-4 align-middle">
                   <span className="block max-w-xs text-sm font-bold text-carbon">{enrollment.workshop.title}</span>
+                  {enrollment.class && <small className="mt-1 block text-muted">{enrollment.class.name}</small>}
                   {!enrollment.workshop.active && <small className="mt-1 block text-danger">Oficina inativa</small>}
                 </td>
                 <td className="whitespace-nowrap px-5 py-4 align-middle text-sm text-muted">
-                  {dateFormatter.format(new Date(enrollment.workshop.startsAt))}
+                  {formatNextMeeting(enrollment)}
                 </td>
                 <td className="px-5 py-4 align-middle"><EnrollmentStatusBadge status={enrollment.status} /></td>
                 <td className="px-5 py-4 align-middle">
@@ -85,6 +87,14 @@ export function EnrollmentsTable({ enrollments, updatingEnrollmentId, onStatusCh
       </div>
     </>
   )
+}
+
+function formatNextMeeting(enrollment: AdminEnrollment) {
+  const nextMeeting = enrollment.class?.meetings
+    .map((meeting) => meeting.startsAt)
+    .sort((first, second) => new Date(first).getTime() - new Date(second).getTime())[0]
+
+  return dateFormatter.format(new Date(nextMeeting ?? enrollment.workshop.startsAt))
 }
 
 function EnrollmentActions({ enrollment, disabled, onStatusChange, className }: {

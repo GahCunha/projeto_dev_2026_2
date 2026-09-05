@@ -28,6 +28,19 @@ export type AdminEnrollment = Enrollment & {
     startsAt: string
     active: boolean
   }
+  class: {
+    id: string
+    name: string
+    capacity: number
+    price: number
+    active: boolean
+    meetings: Array<{
+      id: string
+      startsAt: string
+      endsAt: string
+      location: string
+    }>
+  } | null
 }
 
 export type EnrollmentPagination = {
@@ -46,6 +59,7 @@ export type AdminEnrollmentFilters = {
   search?: string
   status?: EnrollmentStatus
   workshopId?: string
+  classId?: string
   page: number
   pageSize?: number
 }

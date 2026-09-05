@@ -15,6 +15,7 @@ export function getAdminEnrollments(filters: AdminEnrollmentFilters, signal?: Ab
   if (filters.search) params.set('search', filters.search)
   if (filters.status) params.set('status', filters.status)
   if (filters.workshopId) params.set('workshopId', filters.workshopId)
+  if (filters.classId) params.set('classId', filters.classId)
 
   return apiRequest<AdminEnrollmentsResponse>(`/api/admin/inscricoes?${params}`, { signal })
 }

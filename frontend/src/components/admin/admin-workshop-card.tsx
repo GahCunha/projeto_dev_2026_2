@@ -56,6 +56,12 @@ export function AdminWorkshopCard({ workshop, onEdit, onStatusChange }: AdminWor
         <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-rule/70 pt-4">
           <Link
             className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4"
+            to={`/admin/oficinas/${workshop.id}/turmas?${new URLSearchParams({ workshopTitle: workshop.title })}`}
+          >
+            Gerir turmas
+          </Link>
+          <Link
+            className="font-mono text-xs font-bold uppercase tracking-wider text-blue underline decoration-saffron decoration-2 underline-offset-4"
             to={`/admin/inscricoes?${new URLSearchParams({ workshopId: workshop.id, workshopTitle: workshop.title })}`}
           >
             Gerir inscrições

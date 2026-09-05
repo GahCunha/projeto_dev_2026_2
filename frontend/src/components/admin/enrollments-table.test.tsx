@@ -20,6 +20,7 @@ function enrollment(status: AdminEnrollment['status']): AdminEnrollment {
       startsAt: '2026-10-01T13:00:00.000Z',
       active: true,
     },
+    class: null,
   }
 }
 
@@ -52,5 +53,25 @@ describe('EnrollmentsTable', () => {
     expect(screen.queryByRole('button', { name: 'Confirmar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
     expect(screen.getAllByText('Nenhuma ação disponível')).not.toHaveLength(0)
+  })
+
+  it('shows the class and uses its first meeting as the next lesson', () => {
+    const classEnrollment = enrollment('PENDENTE')
+    classEnrollment.class = {
+      id: 'class-id',
+      name: 'Turma das quartas',
+      capacity: 12,
+      price: 85.5,
+      active: true,
+      meetings: [
+        { id: 'meeting-2', startsAt: '2026-10-08T13:00:00.000Z', endsAt: '2026-10-08T15:00:00.000Z', location: 'Ateliê 2' },
+        { id: 'meeting-1', startsAt: '2026-10-03T13:00:00.000Z', endsAt: '2026-10-03T15:00:00.000Z', location: 'Ateliê 2' },
+      ],
+    }
+
+    render(<EnrollmentsTable enrollments={[classEnrollment]} onStatusChange={vi.fn()} />)
+
+    expect(screen.getAllByText('Turma das quartas')).not.toHaveLength(0)
+    expect(screen.getAllByText(/03 de out\. de 2026/)).not.toHaveLength(0)
   })
 })
