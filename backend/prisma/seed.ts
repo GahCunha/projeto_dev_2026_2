@@ -1,160 +1,323 @@
-import { EnrollmentStatus, PrismaClient } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus, PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { env } from "../src/config/environment.js";
 
 const prisma = new PrismaClient();
 
-function futureDate(days: number) {
+function futureDate(days: number, hour = 14, minute = 0) {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() + days);
-  date.setUTCHours(13, 0, 0, 0);
+  date.setUTCHours(hour, minute, 0, 0);
   return date;
 }
 
-const workshops = [
-  {
-    title: "Carpintaria para iniciantes",
-    category: "Carpintaria",
-    description: "Aprenda técnicas fundamentais e construa sua primeira peça em madeira.",
-    imageUrl: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b",
-    materials: ["Avental", "Óculos de proteção"],
-    startsAt: futureDate(14),
-    durationMin: 240,
-    capacity: 12,
-    location: "Ateliê Madeira, sala 1",
-    active: true,
-  },
+type MeetingSeed = {
+  daysFromNow: number;
+  hour: number;
+  minute?: number;
+  durationMin: number;
+  location: string;
+};
+
+type ClassSeed = {
+  name: string;
+  capacity: number;
+  price: number;
+  active: boolean;
+  meetings: MeetingSeed[];
+};
+
+type WorkshopSeed = {
+  title: string;
+  category: string;
+  description: string;
+  imageUrl: string;
+  materials: string[];
+  active: boolean;
+  classes: ClassSeed[];
+};
+
+const workshops: WorkshopSeed[] = [
+  // --- CROCHÊ (3 oficinas) ---
   {
     title: "Crochê: primeiros pontos",
     category: "Crochê",
-    description: "Uma introdução acolhedora ao crochê, do manuseio da agulha à primeira peça.",
-    imageUrl: "https://images.unsplash.com/photo-1604881991720-f91add269bed",
-    materials: ["Agulha de crochê 3,5 mm", "Novelo de algodão"],
-    startsAt: futureDate(21),
-    durationMin: 180,
-    capacity: 16,
-    location: "Ateliê Têxtil, sala 2",
+    description: "Uma introdução acolhedora e prática ao universo do crochê. Aprenda o manuseio correto da agulha, correntinha, ponto baixo e ponto alto enquanto confecciona sua primeira peça de algodão.",
+    imageUrl: "https://images.unsplash.com/photo-1620633437938-be73c35eb77e",
+    materials: ["Agulha de crochê 3,5 mm", "Novelo de fio 100% algodão", "Tesourinha de arremate"],
     active: true,
+    classes: [
+      {
+        name: "Turma Terça · Tarde",
+        capacity: 12,
+        price: 85,
+        active: true,
+        meetings: [
+          { daysFromNow: 7, hour: 14, minute: 0, durationMin: 150, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+      {
+        name: "Turma Sábado · Manhã",
+        capacity: 10,
+        price: 95,
+        active: true,
+        meetings: [
+          { daysFromNow: 11, hour: 9, minute: 30, durationMin: 150, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+    ],
   },
   {
-    title: "Cerâmica fria criativa",
-    category: "Modelagem",
-    description: "Modele e finalize pequenos objetos decorativos usando cerâmica fria.",
+    title: "Crochê: sua primeira bolsa",
+    category: "Crochê",
+    description: "Do fundo estruturado às alças reforçadas, construa uma bolsa completa em fio de malha em uma tarde. Domine técnicas de acabamento invisível e colocação de ferragens.",
+    imageUrl: "https://images.unsplash.com/photo-1594638963668-52eb9798e8ca",
+    materials: ["Fio de malha premium", "Agulha de crochê 7 mm", "Par de alças e fecho magnético"],
+    active: true,
+    classes: [
+      {
+        name: "Turma Sábado Intensivo (2 aulas)",
+        capacity: 8,
+        price: 130,
+        active: true,
+        meetings: [
+          { daysFromNow: 12, hour: 13, minute: 30, durationMin: 240, location: "Ateliê Têxtil, sala 1" },
+          { daysFromNow: 19, hour: 13, minute: 30, durationMin: 240, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+      {
+        name: "Turma Quarta · Noturna (2 aulas)",
+        capacity: 8,
+        price: 130,
+        active: true,
+        meetings: [
+          { daysFromNow: 15, hour: 18, minute: 30, durationMin: 210, location: "Ateliê Têxtil, sala 1" },
+          { daysFromNow: 22, hour: 18, minute: 30, durationMin: 210, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Amigurumi: bichinhos em crochê",
+    category: "Crochê",
+    description: "Aprenda a magia de criar pequenos personagens tridimensionais. Domine anel mágico, aumentos, diminuições perfeitas, montagem de partes e enchimento com fibra siliconada.",
+    imageUrl: "https://images.unsplash.com/photo-1766090503766-623b62f0da26",
+    materials: ["Fio amigurumi 100% algodão", "Agulha de crochê 2,5 mm", "Fibra siliconada antialérgica", "Olhos com trava de segurança"],
+    active: true,
+    classes: [
+      {
+        name: "Turma Sábado · Tarde",
+        capacity: 8,
+        price: 120,
+        active: true,
+        meetings: [
+          { daysFromNow: 14, hour: 14, minute: 0, durationMin: 240, location: "Ateliê Têxtil, sala 2" },
+        ],
+      },
+      {
+        name: "Turma Quinta · Tarde",
+        capacity: 8,
+        price: 110,
+        active: true,
+        meetings: [
+          { daysFromNow: 17, hour: 14, minute: 0, durationMin: 240, location: "Ateliê Têxtil, sala 2" },
+        ],
+      },
+    ],
+  },
+
+  // --- CERÂMICA (3 oficinas) ---
+  {
+    title: "Cerâmica: copo feito à mão",
+    category: "Cerâmica",
+    description: "Modele sua própria caneca ou copo utilitário usando as técnicas clássicas de belisco (pinch pot) e placas manuais. Inclui queima em alta temperatura e esmaltação artesanal.",
+    imageUrl: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261",
+    materials: ["Argila terracota pura", "Estecas de madeira para modelagem", "Avental de lona"],
+    active: true,
+    classes: [
+      {
+        name: "Turma Quarta · Manhã",
+        capacity: 8,
+        price: 95,
+        active: true,
+        meetings: [
+          { daysFromNow: 9, hour: 9, minute: 0, durationMin: 180, location: "Ateliê de Cerâmica, sala 1" },
+        ],
+      },
+      {
+        name: "Turma Quinta · Noturna",
+        capacity: 8,
+        price: 105,
+        active: true,
+        meetings: [
+          { daysFromNow: 16, hour: 19, minute: 0, durationMin: 180, location: "Ateliê de Cerâmica, sala 1" },
+        ],
+      },
+      {
+        name: "Turma Sábado · Tarde",
+        capacity: 6,
+        price: 110,
+        active: true,
+        meetings: [
+          { daysFromNow: 18, hour: 14, minute: 0, durationMin: 180, location: "Ateliê de Cerâmica, sala 1" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Cerâmica: pratos e texturas",
+    category: "Cerâmica",
+    description: "Transforme folhas botânicas, rendas e carimbos em relevos e texturas expressivas em argila branca. Crie um conjunto de dois pratos artesanais exclusivos para mesa posta.",
     imageUrl: "https://images.unsplash.com/photo-1610701596007-11502861dcfa",
-    materials: ["Avental", "Pano de limpeza"],
-    startsAt: futureDate(28),
-    durationMin: 210,
-    capacity: 10,
-    location: "Ateliê Modelagem, sala 3",
+    materials: ["Argila branca nacional", "Kit de carimbos e elementos botânicos", "Rolo nivelador e guias de espessura"],
     active: true,
+    classes: [
+      {
+        name: "Turma Sexta · Tarde",
+        capacity: 10,
+        price: 110,
+        active: true,
+        meetings: [
+          { daysFromNow: 13, hour: 14, minute: 0, durationMin: 180, location: "Ateliê de Cerâmica, sala 2" },
+        ],
+      },
+      {
+        name: "Turma Domingo · Manhã",
+        capacity: 8,
+        price: 120,
+        active: true,
+        meetings: [
+          { daysFromNow: 20, hour: 9, minute: 30, durationMin: 180, location: "Ateliê de Cerâmica, sala 2" },
+        ],
+      },
+    ],
   },
   {
-    title: "Bordado botânico",
-    category: "Bordado",
-    description: "Crie composições inspiradas em folhas e flores usando pontos de bordado livre.",
-    imageUrl: "https://images.unsplash.com/photo-1590739225287-bd31519780c3",
-    materials: ["Bastidor de 18 cm", "Agulha de bordado", "Tesoura pequena"],
-    startsAt: futureDate(35),
-    durationMin: 180,
-    capacity: 14,
-    location: "Ateliê Têxtil, sala 1",
+    title: "Cerâmica criativa: formas livres",
+    category: "Cerâmica",
+    description: "Desconecte-se de moldes rígidos e explore assimetria, volume e formas orgânicas. Ideal para quem deseja criar vasos esculturais e peças decorativas de design autoral.",
+    imageUrl: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61",
+    materials: ["Argila com chamote", "Desbastadores de laço metálico", "Esponjas de acabamento", "Avental"],
     active: true,
+    classes: [
+      {
+        name: "Turma Sábado · Tarde",
+        capacity: 8,
+        price: 140,
+        active: true,
+        meetings: [
+          { daysFromNow: 21, hour: 14, minute: 0, durationMin: 210, location: "Ateliê de Cerâmica, sala 1" },
+        ],
+      },
+    ],
   },
+
+  // --- MADEIRA (2 oficinas) ---
   {
-    title: "Velas artesanais aromáticas",
-    category: "Velas",
-    description: "Aprenda a preparar cera, combinar aromas e finalizar velas artesanais.",
-    imageUrl: "https://images.unsplash.com/photo-1603006905003-be475563bc59",
-    materials: ["Avental", "Caderno para anotações"],
-    startsAt: futureDate(42),
-    durationMin: 150,
-    capacity: 12,
-    location: "Cozinha experimental",
+    title: "Madeira: primeira tábua de corte",
+    category: "Madeira",
+    description: "Aprenda fundamentos da marcenaria manual: traçagem, corte com serrote japonês, lixamento progressivo e acabamento culinário seguro com óleo mineral e cera de abelha.",
+    imageUrl: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b",
+    materials: ["Prancha de madeira maciça sustentável", "Kit de lixas para madeira", "Óleo mineral e cera de abelha", "Óculos de proteção"],
     active: true,
+    classes: [
+      {
+        name: "Turma Sábado · Manhã",
+        capacity: 8,
+        price: 150,
+        active: true,
+        meetings: [
+          { daysFromNow: 10, hour: 9, minute: 0, durationMin: 180, location: "Ateliê de Madeira, bancada central" },
+        ],
+      },
+      {
+        name: "Turma Domingo · Manhã",
+        capacity: 8,
+        price: 150,
+        active: true,
+        meetings: [
+          { daysFromNow: 18, hour: 9, minute: 0, durationMin: 180, location: "Ateliê de Madeira, bancada central" },
+        ],
+      },
+    ],
   },
   {
-    title: "Encadernação manual",
-    category: "Papel",
-    description: "Monte um caderno artesanal e conheça técnicas básicas de costura e acabamento.",
-    imageUrl: "https://images.unsplash.com/photo-1544816155-12df9643f363",
-    materials: ["Régua", "Lápis", "Estilete"],
-    startsAt: futureDate(49),
-    durationMin: 240,
-    capacity: 10,
-    location: "Ateliê de Papel",
+    title: "Madeira: banco de encaixe",
+    category: "Madeira",
+    description: "Construa um banco compacto sem uso de parafusos aparentes, trabalhando corte guiado, furação, encaixes de espiga e acabamento refinado para levar para casa.",
+    imageUrl: "https://tse4.mm.bing.net/th/id/OIP.ELp9-JTtTrVIhhKETH6JIAHaJ4?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+    materials: ["Madeira pré-cortada de reflorestamento", "Sargentos e grampos de fixação", "Cola PVA de alta resistência", "EPIs completos"],
     active: true,
+    classes: [
+      {
+        name: "Turma Sábado Completo (2 aulas)",
+        capacity: 6,
+        price: 190,
+        active: true,
+        meetings: [
+          { daysFromNow: 24, hour: 9, minute: 0, durationMin: 300, location: "Ateliê de Madeira, sala de máquinas" },
+          { daysFromNow: 31, hour: 9, minute: 0, durationMin: 300, location: "Ateliê de Madeira, sala de máquinas" },
+        ],
+      },
+    ],
   },
+
+  // --- TÊXTIL (2 oficinas) ---
   {
-    title: "Macramê para decoração",
-    category: "Macramê",
-    description: "Pratique os nós essenciais e produza uma pequena peça decorativa para casa.",
-    imageUrl: "https://images.unsplash.com/photo-1522758971460-1d21eed7dc1d",
-    materials: ["Tesoura", "Fita métrica"],
-    startsAt: futureDate(56),
-    durationMin: 180,
-    capacity: 16,
-    location: "Ateliê Têxtil, sala 2",
+    title: "Bordado: desenhando com linha",
+    category: "Têxtil",
+    description: "Conheça os pontos fundamentais do bordado livre (ponto atrás, haste, nó francês e cheio) e transforme um traço ilustrado em arte têxtil delicada em bastidor de bambu.",
+    imageUrl: "https://images.unsplash.com/photo-1610562831268-e04a620e1b0d",
+    materials: ["Bastidor de bambu 16 cm", "Corte de algodão cru pré-lavado", "Meadas de algodão coloridas", "Agulha de bordado nº 7"],
     active: true,
+    classes: [
+      {
+        name: "Turma Terça · Tarde",
+        capacity: 12,
+        price: 80,
+        active: true,
+        meetings: [
+          { daysFromNow: 8, hour: 14, minute: 30, durationMin: 150, location: "Ateliê Têxtil, sala 2" },
+        ],
+      },
+      {
+        name: "Turma Quinta · Noite",
+        capacity: 10,
+        price: 85,
+        active: true,
+        meetings: [
+          { daysFromNow: 15, hour: 19, minute: 0, durationMin: 150, location: "Ateliê Têxtil, sala 2" },
+        ],
+      },
+    ],
   },
   {
-    title: "Sabonetes naturais",
-    category: "Cosmética artesanal",
-    description: "Descubra bases, essências e moldes para produzir sabonetes artesanais suaves.",
-    imageUrl: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec",
-    materials: ["Avental", "Luvas reutilizáveis"],
-    startsAt: futureDate(63),
-    durationMin: 150,
-    capacity: 12,
-    location: "Cozinha experimental",
+    title: "Costura à mão: nécessaire de tecido",
+    category: "Têxtil",
+    description: "Corte, monte e costure uma nécessaire forrada funcional totalmente à mão, aprendendo ponto pesponto reforçado, aplicação de zíper e acabamento de cantos.",
+    imageUrl: "https://drikaartesanato.com/wp-content/uploads/2022/01/necessaire-de-tecido-passo-a-passo-capa.jpg",
+    materials: ["Tecido externo em sarja de algodão", "Forro em tricoline estampada", "Zíper destacável de nylon", "Linha reforçada de pesponto"],
     active: true,
-  },
-  {
-    title: "Mosaico com azulejos",
-    category: "Mosaico",
-    description: "Planeje um desenho e transforme fragmentos de azulejo em uma peça colorida.",
-    imageUrl: "https://images.unsplash.com/photo-1577083552431-6e5fd01aa342",
-    materials: ["Óculos de proteção", "Avental"],
-    startsAt: futureDate(70),
-    durationMin: 210,
-    capacity: 10,
-    location: "Ateliê Modelagem, sala 1",
-    active: true,
-  },
-  {
-    title: "Pintura em tecido",
-    category: "Pintura",
-    description: "Explore mistura de cores, pincéis e acabamento em uma peça de algodão.",
-    imageUrl: "https://images.unsplash.com/photo-1549490349-8643362247b5",
-    materials: ["Pincéis macios", "Pano de algodão"],
-    startsAt: futureDate(77),
-    durationMin: 180,
-    capacity: 14,
-    location: "Sala de Pintura",
-    active: true,
-  },
-  {
-    title: "Cestaria em fibras naturais",
-    category: "Cestaria",
-    description: "Conheça o preparo das fibras e faça uma pequena cesta com trama simples.",
-    imageUrl: "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6",
-    materials: ["Tesoura", "Borrifador com água"],
-    startsAt: futureDate(84),
-    durationMin: 240,
-    capacity: 8,
-    location: "Ateliê Madeira, sala 2",
-    active: false,
-  },
-  {
-    title: "Papel machê criativo",
-    category: "Papel",
-    description: "Modele formas leves com papel reaproveitado e aprenda técnicas de acabamento.",
-    imageUrl: "https://images.unsplash.com/photo-1610701596007-11502861dcfa",
-    materials: ["Avental", "Pincel largo"],
-    startsAt: futureDate(91),
-    durationMin: 180,
-    capacity: 12,
-    location: "Ateliê de Papel",
-    active: false,
+    classes: [
+      {
+        name: "Turma Quarta · Tarde",
+        capacity: 10,
+        price: 90,
+        active: true,
+        meetings: [
+          { daysFromNow: 16, hour: 14, minute: 0, durationMin: 180, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+      {
+        name: "Turma Sábado · Manhã",
+        capacity: 10,
+        price: 95,
+        active: true,
+        meetings: [
+          { daysFromNow: 23, hour: 9, minute: 0, durationMin: 180, location: "Ateliê Têxtil, sala 1" },
+        ],
+      },
+    ],
   },
 ];
 
@@ -174,6 +337,7 @@ const enrollmentStatuses = [
 async function run() {
   const passwordHash = await hash(env.ADMIN_PASSWORD, 12);
 
+  // 1. Garante o administrador configurado
   await prisma.user.upsert({
     where: { email: env.ADMIN_EMAIL.toLowerCase() },
     update: {
@@ -187,87 +351,78 @@ async function run() {
     },
   });
 
-  const savedWorkshops = [];
+  // 2. Limpa dados anteriores para garantir que o seed fique limpo e sincronizado
+  await prisma.enrollment.deleteMany();
+  await prisma.classMeeting.deleteMany();
+  await prisma.workshopClass.deleteMany();
+  await prisma.workshop.deleteMany();
 
-  for (const [workshopIndex, workshop] of workshops.entries()) {
-    const { startsAt, durationMin, capacity, location, ...workshopData } = workshop;
-    const existingWorkshop = await prisma.workshop.findFirst({
-      where: { title: workshop.title },
+  const allSavedClasses: Array<{ id: string; workshopId: string; name: string }> = [];
+
+  // 3. Cadastra as oficinas com múltiplas turmas e seus respectivos encontros
+  for (const workshop of workshops) {
+    const { classes, ...workshopData } = workshop;
+
+    const savedWorkshop = await prisma.workshop.create({
+      data: workshopData,
     });
 
-    const savedWorkshop = existingWorkshop
-      ? await prisma.workshop.update({ where: { id: existingWorkshop.id }, data: workshopData })
-      : await prisma.workshop.create({ data: workshopData });
+    for (const classData of classes) {
+      const { meetings, ...classFields } = classData;
 
-    savedWorkshops.push(savedWorkshop);
-
-    await prisma.workshopClass.upsert({
-      where: { id: savedWorkshop.id },
-      update: {
-        capacity,
-        price: workshopIndex % 3 === 0 ? 120 : workshopIndex % 3 === 1 ? 85.5 : 0,
-        active: workshop.active,
-      },
-      create: {
-        id: savedWorkshop.id,
-        workshopId: savedWorkshop.id,
-        name: "Turma inicial",
-        capacity,
-        price: workshopIndex % 3 === 0 ? 120 : workshopIndex % 3 === 1 ? 85.5 : 0,
-        active: workshop.active,
-      },
-    });
-
-    await prisma.classMeeting.upsert({
-      where: { id: savedWorkshop.id },
-      update: {
-        startsAt,
-        endsAt: new Date(startsAt.getTime() + durationMin * 60_000),
-        location,
-      },
-      create: {
-        id: savedWorkshop.id,
-        classId: savedWorkshop.id,
-        startsAt,
-        endsAt: new Date(startsAt.getTime() + durationMin * 60_000),
-        location,
-      },
-    });
-
-    if (workshopIndex === 0) {
-      const secondMeetingStart = new Date(startsAt.getTime() + 2 * 24 * 60 * 60 * 1000);
-      await prisma.classMeeting.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000001" },
-        update: {
-          classId: savedWorkshop.id,
-          startsAt: secondMeetingStart,
-          endsAt: new Date(secondMeetingStart.getTime() + durationMin * 60_000),
-          location,
-        },
-        create: {
-          id: "00000000-0000-4000-8000-000000000001",
-          classId: savedWorkshop.id,
-          startsAt: secondMeetingStart,
-          endsAt: new Date(secondMeetingStart.getTime() + durationMin * 60_000),
-          location,
+      const savedClass = await prisma.workshopClass.create({
+        data: {
+          workshopId: savedWorkshop.id,
+          name: classFields.name,
+          capacity: classFields.capacity,
+          price: classFields.price,
+          active: classFields.active,
         },
       });
+
+      allSavedClasses.push(savedClass);
+
+      for (const meeting of meetings) {
+        const startsAt = futureDate(meeting.daysFromNow, meeting.hour, meeting.minute ?? 0);
+        const endsAt = new Date(startsAt.getTime() + meeting.durationMin * 60_000);
+
+        await prisma.classMeeting.create({
+          data: {
+            classId: savedClass.id,
+            startsAt,
+            endsAt,
+            location: meeting.location,
+          },
+        });
+      }
     }
   }
 
+  // 4. Cadastra inscrições de demonstração distribuídas entre as turmas
   for (const [index, name] of participantNames.entries()) {
-    const workshop = savedWorkshops[index % savedWorkshops.length];
-    if (!workshop) continue;
+    const targetClass = allSavedClasses[index % allSavedClasses.length];
+    if (!targetClass) continue;
 
     const email = `participante${String(index + 1).padStart(2, "0")}@feitoamao.local`;
     const status = enrollmentStatuses[index % enrollmentStatuses.length] ?? EnrollmentStatus.PENDENTE;
+    const paymentStatus =
+      status === EnrollmentStatus.CONFIRMADA
+        ? PaymentStatus.PAGO
+        : PaymentStatus.PENDENTE;
 
-    await prisma.enrollment.upsert({
-      where: { email_classId: { email, classId: workshop.id } },
-      update: { name, status, classId: workshop.id },
-      create: { name, email, status, classId: workshop.id },
+    await prisma.enrollment.create({
+      data: {
+        name,
+        email,
+        status,
+        paymentStatus,
+        classId: targetClass.id,
+        paidAt: status === EnrollmentStatus.CONFIRMADA ? new Date() : null,
+      },
     });
   }
+
+  console.log(`Seed finalizado com sucesso! ${workshops.length} oficinas e ${allSavedClasses.length} turmas cadastradas.`);
 }
 
 run()
