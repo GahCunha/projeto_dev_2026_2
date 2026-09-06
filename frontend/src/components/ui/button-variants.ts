@@ -5,9 +5,12 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'border-ink bg-saffron text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-button',
-        outline: 'border-ink bg-transparent text-carbon hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-button',
-        ghost: 'min-h-0 border-transparent bg-transparent p-0 font-sans font-bold normal-case tracking-normal text-blue',
+        primary:
+          'border-ink bg-saffron text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-button',
+        outline:
+          'border-ink bg-transparent text-carbon hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-button',
+        ghost:
+          'min-h-0 border-transparent bg-transparent p-0 font-sans font-bold normal-case tracking-normal text-blue',
       },
       size: {
         default: '',
