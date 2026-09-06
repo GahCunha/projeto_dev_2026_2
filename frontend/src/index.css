@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-carbon: #25324a;
@@ -15,25 +15,40 @@
   --color-danger: #a8342d;
   --color-success: #315d4e;
   --color-tape: #ddd5c6;
-  --font-display: "Bricolage Grotesque", sans-serif;
-  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
   --animate-thread-in: thread-in 1.2s ease-out both;
   --animate-loading: loading 1.4s ease infinite;
-  --shadow-craft-sm: 3px 4px 0 color-mix(in srgb, var(--color-carbon) 7%, transparent);
-  --shadow-craft: 7px 9px 0 color-mix(in srgb, var(--color-carbon) 11%, transparent);
+  --shadow-craft-sm: 3px 4px 0
+    color-mix(in srgb, var(--color-carbon) 7%, transparent);
+  --shadow-craft: 7px 9px 0
+    color-mix(in srgb, var(--color-carbon) 11%, transparent);
   --shadow-button: 4px 4px 0 var(--color-carbon);
-  --shadow-photo: 8px 10px 22px color-mix(in srgb, var(--color-ink) 14%, transparent);
-  --shadow-offset: 6px 7px 0 color-mix(in srgb, var(--color-carbon) 9%, transparent);
+  --shadow-photo: 8px 10px 22px
+    color-mix(in srgb, var(--color-ink) 14%, transparent);
+  --shadow-offset: 6px 7px 0
+    color-mix(in srgb, var(--color-carbon) 9%, transparent);
 }
 
 @utility craft-fallback {
-  background-image: linear-gradient(135deg, transparent 48%, color-mix(in srgb, var(--color-carbon) 7%, transparent) 49%, color-mix(in srgb, var(--color-carbon) 7%, transparent) 51%, transparent 52%);
+  background-image: linear-gradient(
+    135deg,
+    transparent 48%,
+    color-mix(in srgb, var(--color-carbon) 7%, transparent) 49%,
+    color-mix(in srgb, var(--color-carbon) 7%, transparent) 51%,
+    transparent 52%
+  );
   background-size: 1.5rem 1.5rem;
 }
 
 @utility loading-surface {
-  background-image: linear-gradient(to right, var(--color-deep), var(--color-light), var(--color-deep));
+  background-image: linear-gradient(
+    to right,
+    var(--color-deep),
+    var(--color-light),
+    var(--color-deep)
+  );
   background-size: 240% 100%;
 }
 
@@ -45,20 +60,42 @@
     text-rendering: optimizeLegibility;
   }
 
-  html { scroll-behavior: smooth; }
+  :root.dark {
+    --color-paper: #141b27;
+    --color-light: #1d2635;
+    --color-deep: #222d3d;
+    --color-ink: #f2eadc;
+    --color-muted: #c5baa7;
+    --color-rule: #536075;
+    --color-ochre: #f0bd50;
+    --color-blue: #79a9e8;
+    --color-green: #8db5a8;
+    --color-tape: #756c5e;
+    --shadow-button: 4px 4px 0 #080b12;
+    --shadow-photo: 8px 10px 22px rgb(0 0 0 / 35%);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
 
   body {
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
     background-color: var(--color-paper);
-    background-image: radial-gradient(color-mix(in srgb, var(--color-carbon) 5%, transparent) 0.7px, transparent 0.7px);
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--color-carbon) 5%, transparent) 0.7px,
+      transparent 0.7px
+    );
     background-size: 7px 7px;
     overflow-x: hidden;
   }
 
   button,
-  a { touch-action: manipulation; }
+  a {
+    touch-action: manipulation;
+  }
 
   button:focus-visible,
   a:focus-visible,
@@ -70,17 +107,41 @@
   }
 }
 
+:root.dark .text-carbon {
+  color: #f2eadc;
+}
+
+:root.dark .text-light {
+  color: #fbf8f1;
+}
+
+:root.dark .border-carbon {
+  border-color: #f2eadc;
+}
+
+:root.dark .hover\:border-carbon:hover {
+  border-color: #f2eadc;
+}
+
 @keyframes thread-in {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0); }
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
 }
 
 @keyframes loading {
-  to { background-position-x: -240%; }
+  to {
+    background-position-x: -240%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  html {
+    scroll-behavior: auto;
+  }
 
   *,
   *::before,
