@@ -70,6 +70,8 @@
     --color-ochre: #f0bd50;
     --color-blue: #79a9e8;
     --color-green: #8db5a8;
+    --color-danger: #ff938b;
+    --color-success: #79c9ad;
     --color-tape: #756c5e;
     --shadow-button: 4px 4px 0 #080b12;
     --shadow-photo: 8px 10px 22px rgb(0 0 0 / 35%);
@@ -121,6 +123,10 @@
 
 :root.dark .hover\:border-carbon:hover {
   border-color: #f2eadc;
+}
+
+:root.dark .brand-logo {
+  filter: brightness(0) invert(1);
 }
 
 @keyframes thread-in {

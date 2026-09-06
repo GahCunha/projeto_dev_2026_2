@@ -131,12 +131,12 @@ export function AdminLoginPage() {
           <p className="font-display text-5xl leading-tight font-bold xl:text-6xl">
             Cada inscrição é o começo de algo feito à mão.
           </p>
-          <footer className="mt-8 border-l-2 border-saffron pl-4 text-light/65">
+          <footer className="mt-8 border-l-2 border-saffron pl-4 text-white/70">
             Organize a agenda. Cuide das pessoas. Abra espaço para novos
             saberes.
           </footer>
         </blockquote>
-        <p className="relative font-mono text-xs tracking-wider text-light/45 uppercase">
+        <p className="relative font-mono text-xs tracking-wider text-white/60 uppercase">
           Painel de gestão · 2026
         </p>
       </aside>

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/use-auth'
 import { cn } from '../../lib/utils'
 import { BrandMark } from '../brand-mark'
+import { ThemeToggle } from '../ui/theme-toggle'
 
 const navigation = [
   { label: 'Visão geral', to: '/admin', end: true },
@@ -31,7 +32,7 @@ export function AdminLayout() {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-white/15 px-5 py-4 lg:px-6 lg:py-6">
             <Link
-              className="flex items-center gap-3 text-light no-underline"
+              className="flex items-center gap-3 text-white no-underline"
               to="/admin"
             >
               <BrandMark />
@@ -39,13 +40,13 @@ export function AdminLayout() {
                 <strong className="block font-display text-lg leading-none">
                   Feito à Mão
                 </strong>
-                <small className="font-mono text-xs tracking-wider text-light/65 uppercase">
+                <small className="font-mono text-xs tracking-wider text-white/70 uppercase">
                   Administração
                 </small>
               </span>
             </Link>
             <Link
-              className="font-mono text-xs tracking-wider text-light/70 uppercase hover:text-white lg:hidden"
+              className="font-mono text-xs tracking-wider text-white/75 uppercase hover:text-white lg:hidden"
               to="/"
             >
               Ver site
@@ -63,7 +64,7 @@ export function AdminLayout() {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    'border-l-2 px-4 py-3 text-sm font-bold whitespace-nowrap text-light/70 no-underline transition hover:bg-white/10 hover:text-white',
+                    'border-l-2 px-4 py-3 text-sm font-bold whitespace-nowrap text-white/75 no-underline transition hover:bg-white/10 hover:text-white',
                     isActive && 'border-saffron bg-white/10 text-white',
                   )
                 }
@@ -75,9 +76,9 @@ export function AdminLayout() {
 
           <div className="hidden border-t border-white/15 p-5 lg:block">
             <p className="mb-1 truncate text-sm font-bold">{user?.name}</p>
-            <p className="mb-4 truncate text-xs text-light/60">{user?.email}</p>
+            <p className="mb-4 truncate text-xs text-white/70">{user?.email}</p>
             <button
-              className="font-mono text-xs tracking-wider text-light/70 uppercase underline decoration-saffron underline-offset-4 hover:text-white disabled:opacity-50"
+              className="font-mono text-xs tracking-wider text-white/75 uppercase underline decoration-saffron underline-offset-4 hover:text-white disabled:opacity-50"
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
@@ -107,6 +108,7 @@ export function AdminLayout() {
             >
               Sair
             </button>
+            <ThemeToggle />
           </div>
         </header>
         <main className="px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
