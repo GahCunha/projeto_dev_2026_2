@@ -13,13 +13,21 @@ describe('EnrollmentForm', () => {
 
   it('validates the participant name before calling the API', async () => {
     const user = userEvent.setup()
-    render(<EnrollmentForm classId="class-id" hasAvailableSeats onCreated={vi.fn()} />)
+    render(
+      <EnrollmentForm
+        classId="class-id"
+        hasAvailableSeats
+        onCreated={vi.fn()}
+      />,
+    )
 
     await user.type(screen.getByLabelText('Nome completo'), 'Al')
     await user.type(screen.getByLabelText('E-mail'), 'al@example.com')
     await user.click(screen.getByRole('button', { name: 'Quero participar' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent('pelo menos 3 caracteres')
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'pelo menos 3 caracteres',
+    )
     expect(createEnrollmentMock).not.toHaveBeenCalled()
   })
 
@@ -38,7 +46,13 @@ describe('EnrollmentForm', () => {
         updatedAt: new Date().toISOString(),
       },
     })
-    render(<EnrollmentForm classId="class-id" hasAvailableSeats onCreated={onCreated} />)
+    render(
+      <EnrollmentForm
+        classId="class-id"
+        hasAvailableSeats
+        onCreated={onCreated}
+      />,
+    )
 
     await user.type(screen.getByLabelText('Nome completo'), '  Maria Artesã  ')
     await user.type(screen.getByLabelText('E-mail'), '  maria@example.com  ')
@@ -49,15 +63,29 @@ describe('EnrollmentForm', () => {
       email: 'maria@example.com',
       classId: 'class-id',
     })
-    expect(await screen.findByRole('status')).toHaveTextContent('Inscrição recebida')
-    expect(screen.getByRole('status')).toHaveTextContent('link para simular o pagamento PIX')
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Inscrição recebida',
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'link para simular o pagamento PIX',
+    )
     expect(onCreated).toHaveBeenCalledOnce()
   })
 
   it('does not render a form when there are no seats', () => {
-    render(<EnrollmentForm classId="class-id" hasAvailableSeats={false} onCreated={vi.fn()} />)
+    render(
+      <EnrollmentForm
+        classId="class-id"
+        hasAvailableSeats={false}
+        onCreated={vi.fn()}
+      />,
+    )
 
-    expect(screen.getByRole('status')).toHaveTextContent('sem vagas disponíveis')
-    expect(screen.queryByRole('button', { name: 'Quero participar' })).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'sem vagas disponíveis',
+    )
+    expect(
+      screen.queryByRole('button', { name: 'Quero participar' }),
+    ).not.toBeInTheDocument()
   })
 })

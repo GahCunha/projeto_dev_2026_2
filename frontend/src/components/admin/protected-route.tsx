@@ -8,7 +8,7 @@ export function ProtectedRoute() {
   if (isLoading) {
     return (
       <main className="grid min-h-screen place-items-center bg-paper px-6">
-        <div className="flex items-center gap-4 font-mono text-xs uppercase tracking-wider text-muted">
+        <div className="flex items-center gap-4 font-mono text-xs tracking-wider text-muted uppercase">
           <span className="size-3 animate-pulse rounded-full bg-saffron" />
           Verificando acesso
         </div>
@@ -16,6 +16,7 @@ export function ProtectedRoute() {
     )
   }
 
-  if (!user) return <Navigate to="/admin/login" state={{ from: location }} replace />
+  if (!user)
+    return <Navigate to="/admin/login" state={{ from: location }} replace />
   return <Outlet />
 }

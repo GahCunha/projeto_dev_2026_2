@@ -9,7 +9,12 @@ export type EnrollmentCancellation = {
   }
   class: {
     name: string
-    meetings: Array<{ id: string; startsAt: string; endsAt: string; location: string }>
+    meetings: Array<{
+      id: string
+      startsAt: string
+      endsAt: string
+      location: string
+    }>
   }
 }
 

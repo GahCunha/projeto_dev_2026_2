@@ -15,8 +15,14 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<PublicHomePage />} />
-      <Route path="/inscricoes/cancelar/:token" element={<EnrollmentCancellationPage />} />
-      <Route path="/inscricoes/pagamento/:token" element={<EnrollmentPaymentPage />} />
+      <Route
+        path="/inscricoes/cancelar/:token"
+        element={<EnrollmentCancellationPage />}
+      />
+      <Route
+        path="/inscricoes/pagamento/:token"
+        element={<EnrollmentPaymentPage />}
+      />
       <Route element={<AdminAuthBoundary />}>
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route element={<ProtectedRoute />}>
@@ -24,7 +30,10 @@ function App() {
             <Route index element={<AdminHomePage />} />
             <Route path="inscricoes" element={<AdminEnrollmentsPage />} />
             <Route path="oficinas" element={<AdminWorkshopsPage />} />
-            <Route path="oficinas/:workshopId/turmas" element={<AdminClassesPage />} />
+            <Route
+              path="oficinas/:workshopId/turmas"
+              element={<AdminClassesPage />}
+            />
           </Route>
         </Route>
       </Route>

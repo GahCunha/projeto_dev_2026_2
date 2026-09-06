@@ -12,16 +12,26 @@ import {
   updateAdminWorkshop,
   updateAdminWorkshopStatus,
 } from '../services/admin-workshop-service'
-import type { AdminWorkshop, WorkshopFormData, WorkshopPagination } from '../types/workshop'
+import type {
+  AdminWorkshop,
+  WorkshopFormData,
+  WorkshopPagination,
+} from '../types/workshop'
 
-const initialPagination: WorkshopPagination = { page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }
+const initialPagination: WorkshopPagination = {
+  page: 1,
+  pageSize: 10,
+  totalItems: 0,
+  totalPages: 0,
+}
 
 export function AdminWorkshopsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') ?? ''
   const activeParam = searchParams.get('active')
-  const active = activeParam === 'true' ? true : activeParam === 'false' ? false : undefined
+  const active =
+    activeParam === 'true' ? true : activeParam === 'false' ? false : undefined
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(search)
@@ -31,20 +41,28 @@ export function AdminWorkshopsPage() {
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
-  const [formWorkshop, setFormWorkshop] = useState<AdminWorkshop | 'new' | null>(null)
-  const [statusWorkshop, setStatusWorkshop] = useState<AdminWorkshop | null>(null)
+  const [formWorkshop, setFormWorkshop] = useState<
+    AdminWorkshop | 'new' | null
+  >(null)
+  const [statusWorkshop, setStatusWorkshop] = useState<AdminWorkshop | null>(
+    null,
+  )
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
-    getAdminWorkshops({ search: search || undefined, active, page }, controller.signal)
+    getAdminWorkshops(
+      { search: search || undefined, active, page },
+      controller.signal,
+    )
       .then((response) => {
         setWorkshops(response.data)
         setPagination(response.pagination)
         setError(null)
       })
       .catch((requestError: unknown) => {
-        if (requestError instanceof Error && requestError.name !== 'AbortError') setError(requestError.message)
+        if (requestError instanceof Error && requestError.name !== 'AbortError')
+          setError(requestError.message)
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsLoading(false)
@@ -60,10 +78,15 @@ export function AdminWorkshopsPage() {
     setRequestKey((key) => key + 1)
   }
 
-  function updateFilters(values: { search?: string; active?: boolean | null; page?: number }) {
+  function updateFilters(values: {
+    search?: string
+    active?: boolean | null
+    page?: number
+  }) {
     const nextParams = new URLSearchParams()
     const nextSearch = values.search ?? search
-    const nextActive = values.active === undefined ? active : values.active ?? undefined
+    const nextActive =
+      values.active === undefined ? active : (values.active ?? undefined)
     const nextPage = values.page ?? 1
     if (nextSearch) nextParams.set('search', nextSearch)
     if (nextActive !== undefined) nextParams.set('active', String(nextActive))
@@ -92,7 +115,9 @@ export function AdminWorkshopsPage() {
     if (formWorkshop === 'new') {
       const response = await createAdminWorkshop(data)
       closeForm()
-      navigate(`/admin/oficinas/${response.data.id}/turmas?${new URLSearchParams({ workshopTitle: response.data.title, newWorkshop: 'true' })}`)
+      navigate(
+        `/admin/oficinas/${response.data.id}/turmas?${new URLSearchParams({ workshopTitle: response.data.title, newWorkshop: 'true' })}`,
+      )
       return
     }
     if (formWorkshop) {
@@ -111,7 +136,11 @@ export function AdminWorkshopsPage() {
       setStatusWorkshop(null)
       refresh(`Oficina ${nextActive ? 'ativada' : 'desativada'} com sucesso.`)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Não foi possível alterar o status.')
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Não foi possível alterar o status.',
+      )
       setStatusWorkshop(null)
     } finally {
       setIsUpdatingStatus(false)
@@ -124,49 +153,187 @@ export function AdminWorkshopsPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-7 flex flex-col justify-between gap-4 border-b border-rule pb-6 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-ochre">Catálogo de experiências</p>
-          <h1 className="font-display text-3xl font-bold text-carbon sm:text-4xl">Oficinas</h1>
-          <p className="mt-2 text-muted">Cadastre as oficinas e organize datas, valores e vagas dentro de cada turma.</p>
+          <p className="mb-2 font-mono text-xs tracking-wider text-ochre uppercase">
+            Catálogo de experiências
+          </p>
+          <h1 className="font-display text-3xl font-bold text-carbon sm:text-4xl">
+            Oficinas
+          </h1>
+          <p className="mt-2 text-muted">
+            Cadastre as oficinas e organize datas, valores e vagas dentro de
+            cada turma.
+          </p>
         </div>
         <Button onClick={() => setFormWorkshop('new')}>Criar oficina</Button>
       </div>
 
-      {feedback && <div className="mb-5 flex items-center justify-between gap-4 border-l-4 border-success bg-success/10 px-4 py-3 text-sm text-success" role="status"><span>{feedback}</span><button className="font-bold" type="button" onClick={() => setFeedback(null)} aria-label="Fechar mensagem">×</button></div>}
+      {feedback && (
+        <div
+          className="mb-5 flex items-center justify-between gap-4 border-l-4 border-success bg-success/10 px-4 py-3 text-sm text-success"
+          role="status"
+        >
+          <span>{feedback}</span>
+          <button
+            className="font-bold"
+            type="button"
+            onClick={() => setFeedback(null)}
+            aria-label="Fechar mensagem"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
-      <form className="mb-5 grid gap-3 border border-rule bg-paper p-4 sm:grid-cols-[1fr_13rem_auto]" onSubmit={handleSearch}>
+      <form
+        className="mb-5 grid gap-3 border border-rule bg-paper p-4 sm:grid-cols-[1fr_13rem_auto]"
+        onSubmit={handleSearch}
+      >
         <div>
-          <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-muted" htmlFor="workshop-search">Buscar oficina</label>
-          <input className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted" id="workshop-search" type="search" placeholder="Título, categoria ou local da turma" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
+          <label
+            className="mb-1.5 block font-mono text-xs tracking-wider text-muted uppercase"
+            htmlFor="workshop-search"
+          >
+            Buscar oficina
+          </label>
+          <input
+            className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted"
+            id="workshop-search"
+            type="search"
+            placeholder="Título, categoria ou local da turma"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+          />
         </div>
         <div>
-          <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-muted" htmlFor="workshop-active">Publicação</label>
-          <select className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink hover:border-muted" id="workshop-active" value={active === undefined ? '' : String(active)} onChange={(event) => updateFilters({ active: event.target.value === '' ? null : event.target.value === 'true', page: 1 })}>
+          <label
+            className="mb-1.5 block font-mono text-xs tracking-wider text-muted uppercase"
+            htmlFor="workshop-active"
+          >
+            Publicação
+          </label>
+          <select
+            className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink hover:border-muted"
+            id="workshop-active"
+            value={active === undefined ? '' : String(active)}
+            onChange={(event) =>
+              updateFilters({
+                active:
+                  event.target.value === ''
+                    ? null
+                    : event.target.value === 'true',
+                page: 1,
+              })
+            }
+          >
             <option value="">Ativas e inativas</option>
             <option value="true">Somente ativas</option>
             <option value="false">Somente inativas</option>
           </select>
         </div>
-        <Button className="self-end" type="submit">Buscar</Button>
+        <Button className="self-end" type="submit">
+          Buscar
+        </Button>
       </form>
 
       {isLoading && <WorkshopGridSkeleton />}
-      {!isLoading && error && <EmptyState title="Não foi possível carregar as oficinas" description={error} role="alert" action={<Button onClick={() => refresh()}>Tentar novamente</Button>} />}
-      {!isLoading && !error && workshops.length === 0 && <EmptyState title={hasFilters ? 'Nenhuma oficina encontrada' : 'Ainda não há oficinas'} description={hasFilters ? 'Tente mudar a busca ou remover os filtros.' : 'Crie a primeira experiência para começar a receber inscrições.'} action={hasFilters ? <Button variant="outline" onClick={clearFilters}>Limpar filtros</Button> : <Button onClick={() => setFormWorkshop('new')}>Criar oficina</Button>} />}
+      {!isLoading && error && (
+        <EmptyState
+          title="Não foi possível carregar as oficinas"
+          description={error}
+          role="alert"
+          action={<Button onClick={() => refresh()}>Tentar novamente</Button>}
+        />
+      )}
+      {!isLoading && !error && workshops.length === 0 && (
+        <EmptyState
+          title={
+            hasFilters ? 'Nenhuma oficina encontrada' : 'Ainda não há oficinas'
+          }
+          description={
+            hasFilters
+              ? 'Tente mudar a busca ou remover os filtros.'
+              : 'Crie a primeira experiência para começar a receber inscrições.'
+          }
+          action={
+            hasFilters ? (
+              <Button variant="outline" onClick={clearFilters}>
+                Limpar filtros
+              </Button>
+            ) : (
+              <Button onClick={() => setFormWorkshop('new')}>
+                Criar oficina
+              </Button>
+            )
+          }
+        />
+      )}
       {!isLoading && !error && workshops.length > 0 && (
         <>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {workshops.map((workshop) => <AdminWorkshopCard key={workshop.id} workshop={workshop} onEdit={setFormWorkshop} onStatusChange={setStatusWorkshop} />)}
+            {workshops.map((workshop) => (
+              <AdminWorkshopCard
+                key={workshop.id}
+                workshop={workshop}
+                onEdit={setFormWorkshop}
+                onStatusChange={setStatusWorkshop}
+              />
+            ))}
           </div>
-          <AdminPagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} itemLabel="oficinas" onPageChange={(nextPage) => updateFilters({ page: nextPage })} />
+          <AdminPagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            itemLabel="oficinas"
+            onPageChange={(nextPage) => updateFilters({ page: nextPage })}
+          />
         </>
       )}
 
-      {formWorkshop && <WorkshopFormPanel workshop={formWorkshop === 'new' ? undefined : formWorkshop} onSubmit={saveWorkshop} onClose={closeForm} />}
-      {statusWorkshop && <ConfirmationDialog title={`${statusWorkshop.active ? 'Desativar' : 'Ativar'} “${statusWorkshop.title}”?`} description={statusWorkshop.active ? 'Ela deixará de aparecer na área pública, mas as inscrições existentes serão preservadas.' : 'Ela voltará a aparecer na área pública quando possuir uma turma ativa com encontro futuro.'} confirmLabel={statusWorkshop.active ? 'Desativar oficina' : 'Ativar oficina'} isSubmitting={isUpdatingStatus} onConfirm={changeStatus} onClose={() => setStatusWorkshop(null)} />}
+      {formWorkshop && (
+        <WorkshopFormPanel
+          workshop={formWorkshop === 'new' ? undefined : formWorkshop}
+          onSubmit={saveWorkshop}
+          onClose={closeForm}
+        />
+      )}
+      {statusWorkshop && (
+        <ConfirmationDialog
+          title={`${statusWorkshop.active ? 'Desativar' : 'Ativar'} “${statusWorkshop.title}”?`}
+          description={
+            statusWorkshop.active
+              ? 'Ela deixará de aparecer na área pública, mas as inscrições existentes serão preservadas.'
+              : 'Ela voltará a aparecer na área pública quando possuir uma turma ativa com encontro futuro.'
+          }
+          confirmLabel={
+            statusWorkshop.active ? 'Desativar oficina' : 'Ativar oficina'
+          }
+          isSubmitting={isUpdatingStatus}
+          onConfirm={changeStatus}
+          onClose={() => setStatusWorkshop(null)}
+        />
+      )}
     </div>
   )
 }
 
 function WorkshopGridSkeleton() {
-  return <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Carregando oficinas">{[1, 2, 3].map((item) => <div className="overflow-hidden border border-rule bg-paper" key={item}><div className="loading-surface aspect-[16/7] animate-loading" /><div className="space-y-4 p-5"><div className="loading-surface h-3 w-1/3 animate-loading" /><div className="loading-surface h-6 w-3/4 animate-loading" /><div className="loading-surface h-16 animate-loading" /></div></div>)}<span className="sr-only">Carregando oficinas...</span></div>
+  return (
+    <div
+      className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+      role="status"
+      aria-label="Carregando oficinas"
+    >
+      {[1, 2, 3].map((item) => (
+        <div className="overflow-hidden border border-rule bg-paper" key={item}>
+          <div className="aspect-[16/7] animate-loading loading-surface" />
+          <div className="space-y-4 p-5">
+            <div className="h-3 w-1/3 animate-loading loading-surface" />
+            <div className="h-6 w-3/4 animate-loading loading-surface" />
+            <div className="h-16 animate-loading loading-surface" />
+          </div>
+        </div>
+      ))}
+      <span className="sr-only">Carregando oficinas...</span>
+    </div>
+  )
 }

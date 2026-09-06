@@ -9,7 +9,12 @@ export type EnrollmentPayment = {
   class: {
     name: string
     price: number
-    meetings: Array<{ id: string; startsAt: string; endsAt: string; location: string }>
+    meetings: Array<{
+      id: string
+      startsAt: string
+      endsAt: string
+      location: string
+    }>
   }
 }
 

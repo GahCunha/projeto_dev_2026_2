@@ -20,7 +20,11 @@ const labels: Record<EnrollmentStatus, string> = {
   CANCELADA: 'Cancelada',
 }
 
-export function EnrollmentStatusBadge({ status }: { status: EnrollmentStatus }) {
+export function EnrollmentStatusBadge({
+  status,
+}: {
+  status: EnrollmentStatus
+}) {
   return (
     <span className={statusStyles({ status })}>
       <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />

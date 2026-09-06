@@ -18,7 +18,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
   const response = await fetch(`${apiUrl}${path}`, {
     ...init,
     credentials: 'include',
@@ -29,8 +32,13 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   })
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => null)) as ApiErrorResponse | null
-    throw new ApiError(error?.message ?? 'Não foi possível conectar à API.', error ?? undefined)
+    const error = (await response
+      .json()
+      .catch(() => null)) as ApiErrorResponse | null
+    throw new ApiError(
+      error?.message ?? 'Não foi possível conectar à API.',
+      error ?? undefined,
+    )
   }
 
   if (response.status === 204) return undefined as T

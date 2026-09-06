@@ -6,3 +6,5 @@ dist/
 coverage/
 npm-debug.log*
 .claude/
+.playwright-cli/
+output/playwright/

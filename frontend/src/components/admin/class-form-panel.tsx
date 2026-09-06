@@ -34,24 +34,35 @@ function emptyMeeting(key: number): MeetingForm {
   return { key, startsAt: '', endsAt: '', location: '' }
 }
 
-export function ClassFormPanel({ workshopTitle, workshopClass, onSubmit, onClose }: ClassFormPanelProps) {
-  const [nextMeetingKey, setNextMeetingKey] = useState(() => workshopClass?.meetings.length ?? 1)
-  const [form, setForm] = useState<FormState>(() => workshopClass ? {
-    name: workshopClass.name,
-    capacity: String(workshopClass.capacity),
-    price: String(workshopClass.price),
-    meetings: workshopClass.meetings.map((meeting, index) => ({
-      key: index,
-      startsAt: toLocalDateTime(meeting.startsAt),
-      endsAt: toLocalDateTime(meeting.endsAt),
-      location: meeting.location,
-    })),
-  } : {
-    name: '',
-    capacity: '12',
-    price: '0',
-    meetings: [emptyMeeting(0)],
-  })
+export function ClassFormPanel({
+  workshopTitle,
+  workshopClass,
+  onSubmit,
+  onClose,
+}: ClassFormPanelProps) {
+  const [nextMeetingKey, setNextMeetingKey] = useState(
+    () => workshopClass?.meetings.length ?? 1,
+  )
+  const [form, setForm] = useState<FormState>(() =>
+    workshopClass
+      ? {
+          name: workshopClass.name,
+          capacity: String(workshopClass.capacity),
+          price: String(workshopClass.price),
+          meetings: workshopClass.meetings.map((meeting, index) => ({
+            key: index,
+            startsAt: toLocalDateTime(meeting.startsAt),
+            endsAt: toLocalDateTime(meeting.endsAt),
+            location: meeting.location,
+          })),
+        }
+      : {
+          name: '',
+          capacity: '12',
+          price: '0',
+          meetings: [emptyMeeting(0)],
+        },
+  )
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -63,7 +74,11 @@ export function ClassFormPanel({ workshopTitle, workshopClass, onSubmit, onClose
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isSubmitting, onClose])
 
-  function updateMeeting(key: number, field: keyof Omit<MeetingForm, 'key'>, value: string) {
+  function updateMeeting(
+    key: number,
+    field: keyof Omit<MeetingForm, 'key'>,
+    value: string,
+  ) {
     setForm((current) => ({
       ...current,
       meetings: current.meetings.map((meeting) =>
@@ -104,61 +119,218 @@ export function ClassFormPanel({ workshopTitle, workshopClass, onSubmit, onClose
         })),
       })
     } catch (requestError) {
-      setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível salvar a turma.')
+      setError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : 'Não foi possível salvar a turma.',
+      )
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-carbon/55" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="h-full w-full max-w-3xl overflow-y-auto border-l border-rule bg-light shadow-photo" role="dialog" aria-modal="true" aria-labelledby="class-form-title">
+    <div
+      className="fixed inset-0 z-40 flex justify-end bg-carbon/55"
+      role="presentation"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <section
+        className="h-full w-full max-w-3xl overflow-y-auto border-l border-rule bg-light shadow-photo"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="class-form-title"
+      >
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-rule bg-paper px-5 py-5 sm:px-7">
           <div>
-            <p className="mb-1 font-mono text-xs uppercase tracking-wider text-ochre">{workshopTitle}</p>
-            <h2 className="font-display text-2xl font-bold text-carbon" id="class-form-title">{workshopClass ? 'Editar turma' : 'Criar turma'}</h2>
+            <p className="mb-1 font-mono text-xs tracking-wider text-ochre uppercase">
+              {workshopTitle}
+            </p>
+            <h2
+              className="font-display text-2xl font-bold text-carbon"
+              id="class-form-title"
+            >
+              {workshopClass ? 'Editar turma' : 'Criar turma'}
+            </h2>
           </div>
-          <button className="min-h-10 px-2 font-mono text-xs uppercase tracking-wider text-muted hover:text-carbon" type="button" onClick={onClose} aria-label="Fechar formulário">Fechar ×</button>
+          <button
+            className="min-h-10 px-2 font-mono text-xs tracking-wider text-muted uppercase hover:text-carbon"
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar formulário"
+          >
+            Fechar ×
+          </button>
         </header>
 
         <form className="space-y-8 px-5 py-6 sm:px-7" onSubmit={handleSubmit}>
           <fieldset className="grid gap-5 sm:grid-cols-3">
-            <legend className="mb-4 font-display text-lg font-bold text-carbon">Dados da turma</legend>
-            <FormField className="sm:col-span-3" label="Nome da turma" id="class-name">
-              <input className={inputStyles} id="class-name" minLength={3} maxLength={100} required autoFocus value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Turma noturna de setembro" />
+            <legend className="mb-4 font-display text-lg font-bold text-carbon">
+              Dados da turma
+            </legend>
+            <FormField
+              className="sm:col-span-3"
+              label="Nome da turma"
+              id="class-name"
+            >
+              <input
+                className={inputStyles}
+                id="class-name"
+                minLength={3}
+                maxLength={100}
+                required
+                autoFocus
+                value={form.name}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="Ex.: Turma noturna de setembro"
+              />
             </FormField>
             <FormField label="Vagas" id="class-capacity">
-              <input className={inputStyles} id="class-capacity" type="number" min={1} max={500} required value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} />
+              <input
+                className={inputStyles}
+                id="class-capacity"
+                type="number"
+                min={1}
+                max={500}
+                required
+                value={form.capacity}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    capacity: event.target.value,
+                  }))
+                }
+              />
             </FormField>
-            <FormField className="sm:col-span-2" label="Preço em reais" id="class-price" hint="Use 0 para uma turma gratuita.">
-              <input className={inputStyles} id="class-price" type="number" min={0} max={100000} step="0.01" required value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} />
+            <FormField
+              className="sm:col-span-2"
+              label="Preço em reais"
+              id="class-price"
+              hint="Use 0 para uma turma gratuita."
+            >
+              <input
+                className={inputStyles}
+                id="class-price"
+                type="number"
+                min={0}
+                max={100000}
+                step="0.01"
+                required
+                value={form.price}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    price: event.target.value,
+                  }))
+                }
+              />
             </FormField>
           </fieldset>
 
           <section aria-labelledby="class-meetings-title">
             <div className="mb-4 flex items-end justify-between gap-4">
               <div>
-                <h3 className="font-display text-lg font-bold text-carbon" id="class-meetings-title">Aulas da turma</h3>
-                <p className="mt-1 text-sm text-muted">A inscrição inclui todas as datas cadastradas.</p>
+                <h3
+                  className="font-display text-lg font-bold text-carbon"
+                  id="class-meetings-title"
+                >
+                  Aulas da turma
+                </h3>
+                <p className="mt-1 text-sm text-muted">
+                  A inscrição inclui todas as datas cadastradas.
+                </p>
               </div>
-              <Button variant="outline" onClick={addMeeting}>Adicionar aula</Button>
+              <Button variant="outline" onClick={addMeeting}>
+                Adicionar aula
+              </Button>
             </div>
 
             <div className="grid gap-5">
               {form.meetings.map((meeting, index) => (
-                <section className="border border-rule bg-paper p-4 sm:p-5" key={meeting.key} aria-labelledby={`meeting-${meeting.key}-title`}>
+                <section
+                  className="border border-rule bg-paper p-4 sm:p-5"
+                  key={meeting.key}
+                  aria-labelledby={`meeting-${meeting.key}-title`}
+                >
                   <div className="mb-4 flex items-center justify-between gap-4 border-b border-rule/70 pb-3">
-                    <h3 className="font-display text-lg font-bold text-carbon" id={`meeting-${meeting.key}-title`}>Aula {index + 1}</h3>
-                    <button className="min-h-10 font-mono text-xs uppercase tracking-wider text-danger underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40" type="button" disabled={form.meetings.length === 1} onClick={() => removeMeeting(meeting.key)}>Remover</button>
+                    <h3
+                      className="font-display text-lg font-bold text-carbon"
+                      id={`meeting-${meeting.key}-title`}
+                    >
+                      Aula {index + 1}
+                    </h3>
+                    <button
+                      className="min-h-10 font-mono text-xs tracking-wider text-danger uppercase underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40"
+                      type="button"
+                      disabled={form.meetings.length === 1}
+                      onClick={() => removeMeeting(meeting.key)}
+                    >
+                      Remover
+                    </button>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField label="Início" id={`meeting-${meeting.key}-start`}>
-                      <input className={inputStyles} id={`meeting-${meeting.key}-start`} type="datetime-local" required value={meeting.startsAt} onChange={(event) => updateMeeting(meeting.key, 'startsAt', event.target.value)} />
+                    <FormField
+                      label="Início"
+                      id={`meeting-${meeting.key}-start`}
+                    >
+                      <input
+                        className={inputStyles}
+                        id={`meeting-${meeting.key}-start`}
+                        type="datetime-local"
+                        required
+                        value={meeting.startsAt}
+                        onChange={(event) =>
+                          updateMeeting(
+                            meeting.key,
+                            'startsAt',
+                            event.target.value,
+                          )
+                        }
+                      />
                     </FormField>
-                    <FormField label="Término" id={`meeting-${meeting.key}-end`}>
-                      <input className={inputStyles} id={`meeting-${meeting.key}-end`} type="datetime-local" required value={meeting.endsAt} onChange={(event) => updateMeeting(meeting.key, 'endsAt', event.target.value)} />
+                    <FormField
+                      label="Término"
+                      id={`meeting-${meeting.key}-end`}
+                    >
+                      <input
+                        className={inputStyles}
+                        id={`meeting-${meeting.key}-end`}
+                        type="datetime-local"
+                        required
+                        value={meeting.endsAt}
+                        onChange={(event) =>
+                          updateMeeting(
+                            meeting.key,
+                            'endsAt',
+                            event.target.value,
+                          )
+                        }
+                      />
                     </FormField>
-                    <FormField className="sm:col-span-2" label="Local" id={`meeting-${meeting.key}-location`}>
-                      <input className={inputStyles} id={`meeting-${meeting.key}-location`} minLength={3} maxLength={160} required value={meeting.location} onChange={(event) => updateMeeting(meeting.key, 'location', event.target.value)} />
+                    <FormField
+                      className="sm:col-span-2"
+                      label="Local"
+                      id={`meeting-${meeting.key}-location`}
+                    >
+                      <input
+                        className={inputStyles}
+                        id={`meeting-${meeting.key}-location`}
+                        minLength={3}
+                        maxLength={160}
+                        required
+                        value={meeting.location}
+                        onChange={(event) =>
+                          updateMeeting(
+                            meeting.key,
+                            'location',
+                            event.target.value,
+                          )
+                        }
+                      />
                     </FormField>
                   </div>
                 </section>
@@ -166,11 +338,26 @@ export function ClassFormPanel({ workshopTitle, workshopClass, onSubmit, onClose
             </div>
           </section>
 
-          {error && <p className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">{error}</p>}
+          {error && (
+            <p
+              className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
 
           <div className="flex flex-col-reverse gap-3 border-t border-rule pt-5 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : workshopClass ? 'Salvar alterações' : 'Criar turma'}</Button>
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? 'Salvando...'
+                : workshopClass
+                  ? 'Salvar alterações'
+                  : 'Criar turma'}
+            </Button>
           </div>
         </form>
       </section>
@@ -178,12 +365,30 @@ export function ClassFormPanel({ workshopTitle, workshopClass, onSubmit, onClose
   )
 }
 
-const inputStyles = 'min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted'
+const inputStyles =
+  'min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink placeholder:text-muted/60 hover:border-muted'
 
-function FormField({ label, id, hint, className, children }: { label: string; id: string; hint?: string; className?: string; children: ReactNode }) {
+function FormField({
+  label,
+  id,
+  hint,
+  className,
+  children,
+}: {
+  label: string
+  id: string
+  hint?: string
+  className?: string
+  children: ReactNode
+}) {
   return (
     <div className={className}>
-      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-muted" htmlFor={id}>{label}</label>
+      <label
+        className="mb-1.5 block font-mono text-xs tracking-wider text-muted uppercase"
+        htmlFor={id}
+      >
+        {label}
+      </label>
       {children}
       {hint && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
     </div>

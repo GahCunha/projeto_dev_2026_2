@@ -21,8 +21,12 @@ describe('ClassFormPanel', () => {
     await user.clear(screen.getByLabelText('Preço em reais'))
     await user.type(screen.getByLabelText('Preço em reais'), '85.50')
 
-    fireEvent.change(screen.getByLabelText('Início'), { target: { value: '2026-10-07T19:00' } })
-    fireEvent.change(screen.getByLabelText('Término'), { target: { value: '2026-10-07T21:00' } })
+    fireEvent.change(screen.getByLabelText('Início'), {
+      target: { value: '2026-10-07T19:00' },
+    })
+    fireEvent.change(screen.getByLabelText('Término'), {
+      target: { value: '2026-10-07T21:00' },
+    })
     await user.type(screen.getByLabelText('Local'), 'Ateliê Têxtil')
 
     await user.click(screen.getByRole('button', { name: 'Adicionar aula' }))
@@ -56,7 +60,13 @@ describe('ClassFormPanel', () => {
   })
 
   it('keeps at least one meeting in the form', () => {
-    render(<ClassFormPanel workshopTitle="Cerâmica" onSubmit={vi.fn()} onClose={vi.fn()} />)
+    render(
+      <ClassFormPanel
+        workshopTitle="Cerâmica"
+        onSubmit={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
     expect(screen.getByRole('button', { name: 'Remover' })).toBeDisabled()
   })
 })
