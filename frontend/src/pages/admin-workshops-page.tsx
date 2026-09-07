@@ -6,6 +6,7 @@ import { ConfirmationDialog } from '../components/admin/confirmation-dialog'
 import { WorkshopFormPanel } from '../components/admin/workshop-form-panel'
 import { Button } from '../components/ui/button'
 import { EmptyState } from '../components/ui/empty-state'
+import { cn } from '../lib/utils'
 import {
   createAdminWorkshop,
   getAdminWorkshops,
@@ -38,6 +39,7 @@ export function AdminWorkshopsPage() {
   const [workshops, setWorkshops] = useState<AdminWorkshop[]>([])
   const [pagination, setPagination] = useState(initialPagination)
   const [isLoading, setIsLoading] = useState(true)
+  const [isPaginating, setIsPaginating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
@@ -65,7 +67,10 @@ export function AdminWorkshopsPage() {
           setError(requestError.message)
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+          setIsPaginating(false)
+        }
       })
     return () => controller.abort()
   }, [active, page, requestKey, search])
@@ -92,8 +97,17 @@ export function AdminWorkshopsPage() {
     if (nextActive !== undefined) nextParams.set('active', String(nextActive))
     if (nextPage > 1) nextParams.set('page', String(nextPage))
     if (nextParams.toString() === searchParams.toString()) return
+    const isPageNavigation =
+      values.page !== undefined &&
+      values.search === undefined &&
+      values.active === undefined
+
     setFeedback(null)
-    setIsLoading(true)
+    if (isPageNavigation) {
+      setIsPaginating(true)
+    } else {
+      setIsLoading(true)
+    }
     setError(null)
     setSearchParams(nextParams)
   }
@@ -107,6 +121,7 @@ export function AdminWorkshopsPage() {
     setSearchInput('')
     setFeedback(null)
     setIsLoading(true)
+    setIsPaginating(false)
     setError(null)
     setSearchParams(new URLSearchParams())
   }
@@ -269,7 +284,12 @@ export function AdminWorkshopsPage() {
       )}
       {!isLoading && !error && workshops.length > 0 && (
         <>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className={cn(
+              'grid gap-5 transition-opacity duration-200 md:grid-cols-2 xl:grid-cols-3',
+              isPaginating && 'pointer-events-none opacity-50',
+            )}
+          >
             {workshops.map((workshop) => (
               <AdminWorkshopCard
                 key={workshop.id}
@@ -284,6 +304,7 @@ export function AdminWorkshopsPage() {
             totalPages={pagination.totalPages}
             totalItems={pagination.totalItems}
             itemLabel="oficinas"
+            isLoading={isPaginating}
             onPageChange={(nextPage) => updateFilters({ page: nextPage })}
           />
         </>
@@ -325,7 +346,7 @@ function WorkshopGridSkeleton() {
     >
       {[1, 2, 3].map((item) => (
         <div className="overflow-hidden border border-rule bg-paper" key={item}>
-          <div className="aspect-[16/7] animate-loading loading-surface" />
+          <div className="aspect-16/7 animate-loading loading-surface" />
           <div className="space-y-4 p-5">
             <div className="h-3 w-1/3 animate-loading loading-surface" />
             <div className="h-6 w-3/4 animate-loading loading-surface" />

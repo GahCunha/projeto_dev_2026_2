@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { EnrollmentStatus } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -62,24 +62,28 @@ beforeAll(async () => {
         name: `Busca Especial ${marker}`,
         email: `${marker}-1@example.com`,
         status: EnrollmentStatus.PENDENTE,
+        paymentStatus: PaymentStatus.PENDENTE,
         classId: firstClassId,
       },
       {
         name: `Pessoa Confirmada ${marker}`,
         email: `${marker}-2@example.com`,
         status: EnrollmentStatus.CONFIRMADA,
+        paymentStatus: PaymentStatus.PAGO,
         classId: secondClassId,
       },
       {
         name: `Pessoa Cancelada ${marker}`,
         email: `${marker}-3@example.com`,
         status: EnrollmentStatus.CANCELADA,
+        paymentStatus: PaymentStatus.CANCELADO,
         classId: firstClassId,
       },
       {
         name: `Outra Pessoa ${marker}`,
         email: `${marker}-4@example.com`,
         status: EnrollmentStatus.PENDENTE,
+        paymentStatus: PaymentStatus.ISENTO,
         classId: secondClassId,
       },
     ],
@@ -151,6 +155,17 @@ describe("GET /api/admin/inscricoes", () => {
     expect(response.body.data.every((item: { status: string }) => item.status === "PENDENTE")).toBe(
       true,
     );
+  });
+
+  it("filters enrollments by payment status", async () => {
+    const agent = await authenticatedAgent();
+    const response = await agent
+      .get("/api/admin/inscricoes")
+      .query({ search: marker, paymentStatus: PaymentStatus.PENDENTE });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].paymentStatus).toBe(PaymentStatus.PENDENTE);
   });
 
   it("filters enrollments by workshop", async () => {

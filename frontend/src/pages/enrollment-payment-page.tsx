@@ -58,6 +58,7 @@ export function EnrollmentPaymentPage() {
   }
 
   const isPaid = enrollment?.paymentStatus === 'PAGO'
+  const isCanceled = enrollment?.paymentStatus === 'CANCELADO'
 
   return (
     <>
@@ -90,12 +91,18 @@ export function EnrollmentPaymentPage() {
                 className="mt-2 font-display text-3xl font-bold text-carbon sm:text-4xl"
                 id="payment-title"
               >
-                {isPaid ? 'Pagamento registrado.' : `Olá, ${enrollment.name}.`}
+                {isCanceled
+                  ? 'Inscrição cancelada.'
+                  : isPaid
+                    ? 'Pagamento registrado.'
+                    : `Olá, ${enrollment.name}.`}
               </h1>
               <p className="mt-3 leading-relaxed text-muted">
-                {isPaid
-                  ? 'A equipe recebeu o aviso e agora poderá confirmar sua inscrição.'
-                  : 'Esta tela apenas simula um pagamento PIX para fins acadêmicos. Nenhum valor real será cobrado.'}
+                {isCanceled
+                  ? 'Esta cobrança não está mais disponível porque a inscrição foi cancelada.'
+                  : isPaid
+                    ? 'A equipe recebeu o aviso e agora poderá confirmar sua inscrição.'
+                    : 'Esta tela apenas simula um pagamento PIX para fins acadêmicos. Nenhum valor real será cobrado.'}
               </p>
               <dl className="mt-7 grid gap-5 border-y border-rule py-6 sm:grid-cols-2">
                 <div>
@@ -119,9 +126,11 @@ export function EnrollmentPaymentPage() {
                 <div>
                   <dt className={labelStyles}>Situação</dt>
                   <dd className="mt-1 font-bold text-carbon">
-                    {isPaid
-                      ? 'Pago — aguardando confirmação'
-                      : 'Aguardando pagamento'}
+                    {isCanceled
+                      ? 'Cancelado'
+                      : isPaid
+                        ? 'Pago — aguardando confirmação'
+                        : 'Aguardando pagamento'}
                   </dd>
                 </div>
                 <div className="sm:col-span-2">
@@ -153,7 +162,7 @@ export function EnrollmentPaymentPage() {
                 >
                   Voltar às oficinas
                 </Link>
-                {!isPaid && (
+                {!isPaid && !isCanceled && (
                   <Button onClick={handlePayment} disabled={isPaying}>
                     {isPaying ? 'Registrando...' : 'Simular pagamento PIX'}
                   </Button>

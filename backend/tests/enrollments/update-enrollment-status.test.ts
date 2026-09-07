@@ -34,7 +34,13 @@ beforeAll(async () => {
         create: {
           name: "Turma gratuita",
           capacity: 10,
-          meetings: { create: { startsAt, endsAt: new Date(startsAt.getTime() + 7_200_000), location: "Sala de testes" } },
+          meetings: {
+            create: {
+              startsAt,
+              endsAt: new Date(startsAt.getTime() + 7_200_000),
+              location: "Sala de testes",
+            },
+          },
         },
       },
     },
@@ -135,10 +141,12 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
       where: { id: pendingEnrollmentId },
     });
     expect(enrollment?.status).toBe(EnrollmentStatus.CONFIRMADA);
-    expect(emailSpy).toHaveBeenCalledWith(expect.objectContaining({
-      name: "Pessoa Pendente",
-      workshop: expect.objectContaining({ title: expect.any(String) }),
-    }));
+    expect(emailSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Pessoa Pendente",
+        workshop: expect.objectContaining({ title: expect.any(String) }),
+      }),
+    );
     emailSpy.mockRestore();
   });
 
@@ -151,10 +159,13 @@ describe("PATCH /api/admin/inscricoes/:id/status", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.status).toBe(EnrollmentStatus.CANCELADA);
-    expect(emailSpy).toHaveBeenCalledWith(expect.objectContaining({
-      name: "Pessoa Pendente",
-      workshop: expect.objectContaining({ title: expect.any(String) }),
-    }));
+    expect(response.body.data.paymentStatus).toBe(PaymentStatus.CANCELADO);
+    expect(emailSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Pessoa Pendente",
+        workshop: expect.objectContaining({ title: expect.any(String) }),
+      }),
+    );
     emailSpy.mockRestore();
   });
 

@@ -11,9 +11,24 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   weekday: 'short',
   day: '2-digit',
   month: 'short',
+})
+
+const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
   hour: '2-digit',
   minute: '2-digit',
 })
+
+function formatMeetingSchedule(startsAt: string, endsAt: string) {
+  const start = new Date(startsAt)
+  const end = new Date(endsAt)
+  const isSameDay = start.toDateString() === end.toDateString()
+
+  if (!isSameDay) {
+    return `${dateFormatter.format(start)}, ${timeFormatter.format(start)} até ${dateFormatter.format(end)}, ${timeFormatter.format(end)}`
+  }
+
+  return `${dateFormatter.format(start)} · ${timeFormatter.format(start)}–${timeFormatter.format(end)}`
+}
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -38,10 +53,10 @@ export function ClassPicker({
           return (
             <label
               className={cn(
-                'relative grid cursor-pointer gap-4 border bg-light p-5 transition-[transform,box-shadow,border-color] duration-200 focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-blue sm:grid-cols-[1fr_auto]',
+                'relative grid cursor-pointer gap-4 border-2 bg-light p-5 transition-[transform,box-shadow,border-color,background-color] duration-200 focus-within:outline-none sm:grid-cols-[1fr_auto]',
                 selected
-                  ? '-translate-y-0.5 border-carbon shadow-button'
-                  : 'border-rule hover:border-carbon',
+                  ? '-translate-y-0.5 border-carbon bg-paper/30 shadow-button'
+                  : 'border-rule hover:border-carbon/70 hover:bg-paper/20',
                 soldOut && 'cursor-not-allowed opacity-60',
               )}
               key={workshopClass.id}
@@ -63,11 +78,11 @@ export function ClassPicker({
                 <span className="grid gap-1 text-sm text-muted">
                   {workshopClass.meetings.map((meeting, index) => (
                     <span key={meeting.id}>
-                      <span className="font-mono text-xs tracking-wider text-blue uppercase">
+                      <span className="font-mono text-xs tracking-wider text-ochre uppercase">
                         Aula {index + 1}
                       </span>{' '}
-                      {dateFormatter.format(new Date(meeting.startsAt))} ·{' '}
-                      {meeting.location}
+                      {formatMeetingSchedule(meeting.startsAt, meeting.endsAt)}{' '}
+                      · {meeting.location}
                     </span>
                   ))}
                 </span>

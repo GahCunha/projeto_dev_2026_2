@@ -18,12 +18,6 @@ export function SiteFooter() {
       <div className="relative mx-auto max-w-7xl py-12 sm:py-14 lg:py-16">
         {/* Chamada final */}
         <div className="relative mb-12 grid gap-7 border-b border-rule pb-12 lg:grid-cols-[1fr_auto] lg:items-end">
-          {/* Fita */}
-          <span
-            className="absolute -top-5 left-8 h-6 w-24 -rotate-3 bg-tape/80 shadow-sm"
-            aria-hidden="true"
-          />
-
           <div>
             <span className="mb-3 block font-mono text-[10px] tracking-[0.25em] text-muted uppercase">
               Antes de ir

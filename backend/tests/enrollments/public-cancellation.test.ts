@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { EnrollmentStatus } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus } from "@prisma/client";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { app } from "../../src/app.js";
@@ -18,7 +18,15 @@ beforeAll(async () => {
         create: {
           name: "Turma",
           capacity: 10,
-          meetings: { create: { startsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), endsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000 + 7_200_000), location: "Sala de testes" } },
+          meetings: {
+            create: {
+              startsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+              endsAt: new Date(
+                Date.now() + 20 * 24 * 60 * 60 * 1000 + 7_200_000,
+              ),
+              location: "Sala de testes",
+            },
+          },
         },
       },
     },
@@ -37,11 +45,13 @@ afterAll(async () => {
 
 async function createEnrollmentAndGetToken() {
   const emailSpy = vi.spyOn(emailService, "sendEnrollmentReceived");
-  const response = await request(app).post("/api/inscricoes").send({
-    name: "Visitante Artesã",
-    email: `cancelamento-${randomUUID()}@example.com`,
-    classId,
-  });
+  const response = await request(app)
+    .post("/api/inscricoes")
+    .send({
+      name: "Visitante Artesã",
+      email: `cancelamento-${randomUUID()}@example.com`,
+      classId,
+    });
 
   expect(response.status).toBe(201);
   const emailData = emailSpy.mock.calls.at(-1)?.[0];
@@ -54,14 +64,19 @@ async function createEnrollmentAndGetToken() {
 describe("cancelamento público de inscrição", () => {
   it("shows the enrollment linked to a valid token without exposing private fields", async () => {
     const token = await createEnrollmentAndGetToken();
-    const response = await request(app).get(`/api/inscricoes/cancelamento/${token}`);
+    const response = await request(app).get(
+      `/api/inscricoes/cancelamento/${token}`,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.data).toMatchObject({
       name: "Visitante Artesã",
       status: EnrollmentStatus.PENDENTE,
       workshop: { title: expect.any(String) },
-      class: { name: "Turma", meetings: [expect.objectContaining({ location: "Sala de testes" })] },
+      class: {
+        name: "Turma",
+        meetings: [expect.objectContaining({ location: "Sala de testes" })],
+      },
     });
     expect(response.body.data).not.toHaveProperty("email");
     expect(response.body.data).not.toHaveProperty("cancellationTokenHash");
@@ -70,26 +85,37 @@ describe("cancelamento público de inscrição", () => {
   it("cancels the enrollment, releases its seat and sends a notification", async () => {
     const token = await createEnrollmentAndGetToken();
     const emailSpy = vi.spyOn(emailService, "sendEnrollmentCanceled");
-    const response = await request(app).post(`/api/inscricoes/cancelamento/${token}`);
+    const response = await request(app).post(
+      `/api/inscricoes/cancelamento/${token}`,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.data.status).toBe(EnrollmentStatus.CANCELADA);
+    expect(response.body.data.paymentStatus).toBe(PaymentStatus.CANCELADO);
     expect(emailSpy).toHaveBeenCalledOnce();
     emailSpy.mockRestore();
   });
 
   it("rejects a second cancellation with the same token", async () => {
     const token = await createEnrollmentAndGetToken();
-    expect((await request(app).post(`/api/inscricoes/cancelamento/${token}`)).status).toBe(200);
+    expect(
+      (await request(app).post(`/api/inscricoes/cancelamento/${token}`)).status,
+    ).toBe(200);
 
-    const response = await request(app).post(`/api/inscricoes/cancelamento/${token}`);
+    const response = await request(app).post(
+      `/api/inscricoes/cancelamento/${token}`,
+    );
     expect(response.status).toBe(409);
     expect(response.body.error).toBe("ENROLLMENT_ALREADY_CANCELED");
   });
 
   it("does not reveal whether a malformed or unknown token belongs to someone", async () => {
-    const malformedResponse = await request(app).get("/api/inscricoes/cancelamento/token-invalido");
-    const unknownResponse = await request(app).get(`/api/inscricoes/cancelamento/${"a".repeat(64)}`);
+    const malformedResponse = await request(app).get(
+      "/api/inscricoes/cancelamento/token-invalido",
+    );
+    const unknownResponse = await request(app).get(
+      `/api/inscricoes/cancelamento/${"a".repeat(64)}`,
+    );
 
     expect(malformedResponse.status).toBe(422);
     expect(unknownResponse.status).toBe(404);

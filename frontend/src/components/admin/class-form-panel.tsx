@@ -12,8 +12,9 @@ type ClassFormPanelProps = {
 
 type MeetingForm = {
   key: number
-  startsAt: string
-  endsAt: string
+  date: string
+  startTime: string
+  endTime: string
   location: string
 }
 
@@ -24,14 +25,25 @@ type FormState = {
   meetings: MeetingForm[]
 }
 
-function toLocalDateTime(value: string) {
+function toLocalDateTimeParts(value: string) {
   const date = new Date(value)
   const offset = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+  const localDateTime = new Date(date.getTime() - offset)
+    .toISOString()
+    .slice(0, 16)
+
+  return {
+    date: localDateTime.slice(0, 10),
+    time: localDateTime.slice(11, 16),
+  }
 }
 
 function emptyMeeting(key: number): MeetingForm {
-  return { key, startsAt: '', endsAt: '', location: '' }
+  return { key, date: '', startTime: '', endTime: '', location: '' }
+}
+
+function combineLocalDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}`).toISOString()
 }
 
 export function ClassFormPanel({
@@ -49,12 +61,18 @@ export function ClassFormPanel({
           name: workshopClass.name,
           capacity: String(workshopClass.capacity),
           price: String(workshopClass.price),
-          meetings: workshopClass.meetings.map((meeting, index) => ({
-            key: index,
-            startsAt: toLocalDateTime(meeting.startsAt),
-            endsAt: toLocalDateTime(meeting.endsAt),
-            location: meeting.location,
-          })),
+          meetings: workshopClass.meetings.map((meeting, index) => {
+            const start = toLocalDateTimeParts(meeting.startsAt)
+            const end = toLocalDateTimeParts(meeting.endsAt)
+
+            return {
+              key: index,
+              date: start.date,
+              startTime: start.time,
+              endTime: end.time,
+              location: meeting.location,
+            }
+          }),
         }
       : {
           name: '',
@@ -112,11 +130,13 @@ export function ClassFormPanel({
         name: form.name.trim(),
         capacity: Number(form.capacity),
         price: Number(form.price.replace(',', '.')),
-        meetings: form.meetings.map(({ startsAt, endsAt, location }) => ({
-          startsAt: new Date(startsAt).toISOString(),
-          endsAt: new Date(endsAt).toISOString(),
-          location: location.trim(),
-        })),
+        meetings: form.meetings.map(
+          ({ date, startTime, endTime, location }) => ({
+            startsAt: combineLocalDateTime(date, startTime),
+            endsAt: combineLocalDateTime(date, endTime),
+            location: location.trim(),
+          }),
+        ),
       })
     } catch (requestError) {
       setError(
@@ -153,7 +173,7 @@ export function ClassFormPanel({
             </h2>
           </div>
           <button
-            className="min-h-10 px-2 font-mono text-xs tracking-wider text-muted uppercase hover:text-carbon"
+            className="min-h-10 border border-rule bg-deep px-3 font-mono text-xs font-bold tracking-wider text-carbon uppercase transition hover:border-carbon hover:bg-paper"
             type="button"
             onClick={onClose}
             aria-label="Fechar formulário"
@@ -272,47 +292,60 @@ export function ClassFormPanel({
                       Remover
                     </button>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <FormField label="Data" id={`meeting-${meeting.key}-date`}>
+                      <input
+                        className={inputStyles}
+                        id={`meeting-${meeting.key}-date`}
+                        type="date"
+                        required
+                        value={meeting.date}
+                        onChange={(event) =>
+                          updateMeeting(meeting.key, 'date', event.target.value)
+                        }
+                      />
+                    </FormField>
                     <FormField
-                      label="Início"
-                      id={`meeting-${meeting.key}-start`}
+                      label="Hora de início"
+                      id={`meeting-${meeting.key}-start-time`}
                     >
                       <input
                         className={inputStyles}
-                        id={`meeting-${meeting.key}-start`}
-                        type="datetime-local"
+                        id={`meeting-${meeting.key}-start-time`}
+                        type="time"
                         required
-                        value={meeting.startsAt}
+                        value={meeting.startTime}
                         onChange={(event) =>
                           updateMeeting(
                             meeting.key,
-                            'startsAt',
+                            'startTime',
                             event.target.value,
                           )
                         }
                       />
                     </FormField>
                     <FormField
-                      label="Término"
-                      id={`meeting-${meeting.key}-end`}
+                      label="Hora de término"
+                      id={`meeting-${meeting.key}-end-time`}
                     >
                       <input
                         className={inputStyles}
-                        id={`meeting-${meeting.key}-end`}
-                        type="datetime-local"
+                        id={`meeting-${meeting.key}-end-time`}
+                        type="time"
                         required
-                        value={meeting.endsAt}
+                        min={meeting.startTime || undefined}
+                        value={meeting.endTime}
                         onChange={(event) =>
                           updateMeeting(
                             meeting.key,
-                            'endsAt',
+                            'endTime',
                             event.target.value,
                           )
                         }
                       />
                     </FormField>
                     <FormField
-                      className="sm:col-span-2"
+                      className="sm:col-span-3"
                       label="Local"
                       id={`meeting-${meeting.key}-location`}
                     >

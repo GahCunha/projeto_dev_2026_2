@@ -4,6 +4,7 @@ type AdminPaginationProps = {
   totalItems: number
   itemLabel: string
   onPageChange: (page: number) => void
+  isLoading?: boolean
 }
 
 export function AdminPagination({
@@ -12,6 +13,7 @@ export function AdminPagination({
   totalItems,
   itemLabel,
   onPageChange,
+  isLoading = false,
 }: AdminPaginationProps) {
   if (totalPages <= 1) return null
 
@@ -27,8 +29,9 @@ export function AdminPagination({
         <button
           className="min-h-10 border border-rule bg-paper px-4 text-sm font-bold text-carbon transition hover:border-carbon disabled:cursor-not-allowed disabled:opacity-40"
           type="button"
-          disabled={page === 1}
+          disabled={isLoading || page === 1}
           onClick={() => onPageChange(page - 1)}
+          aria-label="Página anterior"
         >
           Anterior
         </button>
@@ -38,8 +41,9 @@ export function AdminPagination({
         <button
           className="min-h-10 border border-rule bg-paper px-4 text-sm font-bold text-carbon transition hover:border-carbon disabled:cursor-not-allowed disabled:opacity-40"
           type="button"
-          disabled={page === totalPages}
+          disabled={isLoading || page === totalPages}
           onClick={() => onPageChange(page + 1)}
+          aria-label="Próxima página"
         >
           Próxima
         </button>

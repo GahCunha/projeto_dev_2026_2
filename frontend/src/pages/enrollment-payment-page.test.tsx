@@ -81,4 +81,19 @@ describe('EnrollmentPaymentPage', () => {
       screen.getByText('Pago — aguardando confirmação'),
     ).toBeInTheDocument()
   })
+
+  it('does not allow payment after the enrollment is canceled', async () => {
+    getPaymentMock.mockResolvedValue({
+      data: { ...payment, status: 'CANCELADA', paymentStatus: 'CANCELADO' },
+    })
+    renderPage()
+
+    expect(
+      await screen.findByRole('heading', { name: 'Inscrição cancelada.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Cancelado')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Simular pagamento PIX' }),
+    ).not.toBeInTheDocument()
+  })
 })

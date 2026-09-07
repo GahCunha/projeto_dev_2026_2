@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
+import { responsiveImageProps } from '../../lib/responsive-image'
+import { cn } from '../../lib/utils'
 import type { AdminWorkshop } from '../../types/workshop'
+import { buttonVariants } from '../ui/button-variants'
 import { WorkshopStatusBadge } from './workshop-status-badge'
 
 type AdminWorkshopCardProps = {
@@ -22,32 +25,42 @@ export function AdminWorkshopCard({
   onStatusChange,
 }: AdminWorkshopCardProps) {
   return (
-    <article className="flex flex-col border border-rule bg-paper shadow-craft-sm">
-      <div className="relative aspect-[16/7] overflow-hidden border-b border-rule bg-deep craft-fallback">
+    <article className="flex min-w-0 flex-col overflow-hidden border border-rule bg-paper shadow-craft-sm">
+      <div className="aspect-16/7 overflow-hidden bg-deep craft-fallback">
         {workshop.imageUrl && (
           <img
             className="size-full object-cover"
-            src={workshop.imageUrl}
+            {...responsiveImageProps(
+              workshop.imageUrl,
+              '(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw',
+              [480, 720, 960],
+            )}
             alt=""
+            loading="lazy"
+            decoding="async"
           />
         )}
-        <div className="absolute top-3 left-3">
+      </div>
+
+      <div className="flex min-h-12 items-center justify-between gap-3 border-y border-rule bg-deep px-5 py-2.5">
+        <p className="truncate font-mono text-xs tracking-wider text-ochre uppercase">
+          {workshop.category}
+        </p>
+        <div className="shrink-0">
           <WorkshopStatusBadge active={workshop.active} />
         </div>
       </div>
+
       <div className="flex flex-1 flex-col p-5">
-        <p className="font-mono text-xs tracking-wider text-ochre uppercase">
-          {workshop.category}
-        </p>
-        <h2 className="mt-2 font-display text-xl leading-tight font-bold text-carbon">
+        <h2 className="font-display text-xl leading-tight font-bold text-carbon">
           {workshop.title}
         </h2>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">
           {workshop.description}
         </p>
 
-        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-rule/70 pt-4 text-sm">
-          <div>
+        <dl className="mt-5 grid grid-cols-3 border-y border-rule/70 py-4 text-sm">
+          <div className="pr-3">
             <dt className="font-mono text-xs tracking-wider text-muted uppercase">
               Turmas
             </dt>
@@ -55,7 +68,7 @@ export function AdminWorkshopCard({
               {workshop.classCount}
             </dd>
           </div>
-          <div>
+          <div className="border-l border-rule/70 px-3">
             <dt className="font-mono text-xs tracking-wider text-muted uppercase">
               Ocupação
             </dt>
@@ -63,7 +76,7 @@ export function AdminWorkshopCard({
               {workshop.occupiedSeats} de {workshop.totalCapacity}
             </dd>
           </div>
-          <div>
+          <div className="border-l border-rule/70 pl-3">
             <dt className="font-mono text-xs tracking-wider text-muted uppercase">
               Disponíveis
             </dt>
@@ -73,7 +86,7 @@ export function AdminWorkshopCard({
               {workshop.availableSeats}
             </dd>
           </div>
-          <div className="col-span-2">
+          <div className="col-span-3 mt-4 border-t border-dashed border-rule/70 pt-4">
             <dt className="font-mono text-xs tracking-wider text-muted uppercase">
               Próximo encontro
             </dt>
@@ -85,7 +98,7 @@ export function AdminWorkshopCard({
           </div>
         </dl>
 
-        <p className="mt-4 text-xs text-muted">
+        <p className="mt-3 text-xs text-muted">
           <strong className="text-carbon tabular-nums">
             {workshop.enrollmentCount}
           </strong>{' '}
@@ -95,33 +108,40 @@ export function AdminWorkshopCard({
           , incluindo canceladas.
         </p>
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-rule/70 pt-4">
-          <Link
-            className="font-mono text-xs font-bold tracking-wider text-blue uppercase underline decoration-saffron decoration-2 underline-offset-4"
-            to={`/admin/oficinas/${workshop.id}/turmas?${new URLSearchParams({ workshopTitle: workshop.title })}`}
-          >
-            Gerir turmas
-          </Link>
-          <Link
-            className="font-mono text-xs font-bold tracking-wider text-blue uppercase underline decoration-saffron decoration-2 underline-offset-4"
-            to={`/admin/inscricoes?${new URLSearchParams({ workshopId: workshop.id, workshopTitle: workshop.title })}`}
-          >
-            Gerir inscrições
-          </Link>
-          <button
-            className="font-mono text-xs font-bold tracking-wider text-blue uppercase underline decoration-saffron decoration-2 underline-offset-4"
-            type="button"
-            onClick={() => onEdit(workshop)}
-          >
-            Editar
-          </button>
-          <button
-            className={`ml-auto font-mono text-xs font-bold tracking-wider uppercase underline underline-offset-4 ${workshop.active ? 'text-danger' : 'text-success'}`}
-            type="button"
-            onClick={() => onStatusChange(workshop)}
-          >
-            {workshop.active ? 'Desativar' : 'Ativar'}
-          </button>
+        <div className="mt-auto pt-5">
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              className={buttonVariants({ variant: 'outline', size: 'full' })}
+              to={`/admin/oficinas/${workshop.id}/turmas?${new URLSearchParams({ workshopTitle: workshop.title })}`}
+            >
+              Gerir turmas
+            </Link>
+            <Link
+              className={buttonVariants({ variant: 'outline', size: 'full' })}
+              to={`/admin/inscricoes?${new URLSearchParams({ workshopId: workshop.id, workshopTitle: workshop.title })}`}
+            >
+              Inscrições
+            </Link>
+            <button
+              className={buttonVariants({ variant: 'outline', size: 'full' })}
+              type="button"
+              onClick={() => onEdit(workshop)}
+            >
+              Editar oficina
+            </button>
+            <button
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'full' }),
+                workshop.active
+                  ? 'border-danger text-danger hover:shadow-none'
+                  : 'border-success text-success hover:shadow-none',
+              )}
+              type="button"
+              onClick={() => onStatusChange(workshop)}
+            >
+              {workshop.active ? 'Desativar' : 'Ativar'}
+            </button>
+          </div>
         </div>
       </div>
     </article>

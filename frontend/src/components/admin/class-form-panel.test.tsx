@@ -21,20 +21,25 @@ describe('ClassFormPanel', () => {
     await user.clear(screen.getByLabelText('Preço em reais'))
     await user.type(screen.getByLabelText('Preço em reais'), '85.50')
 
-    fireEvent.change(screen.getByLabelText('Início'), {
-      target: { value: '2026-10-07T19:00' },
+    fireEvent.change(screen.getByLabelText('Data'), {
+      target: { value: '2026-10-07' },
     })
-    fireEvent.change(screen.getByLabelText('Término'), {
-      target: { value: '2026-10-07T21:00' },
+    fireEvent.change(screen.getByLabelText('Hora de início'), {
+      target: { value: '19:00' },
+    })
+    fireEvent.change(screen.getByLabelText('Hora de término'), {
+      target: { value: '21:00' },
     })
     await user.type(screen.getByLabelText('Local'), 'Ateliê Têxtil')
 
     await user.click(screen.getByRole('button', { name: 'Adicionar aula' }))
-    const starts = screen.getAllByLabelText('Início')
-    const ends = screen.getAllByLabelText('Término')
+    const dates = screen.getAllByLabelText('Data')
+    const starts = screen.getAllByLabelText('Hora de início')
+    const ends = screen.getAllByLabelText('Hora de término')
     const locations = screen.getAllByLabelText('Local')
-    fireEvent.change(starts[1], { target: { value: '2026-10-14T19:00' } })
-    fireEvent.change(ends[1], { target: { value: '2026-10-14T21:00' } })
+    fireEvent.change(dates[1], { target: { value: '2026-10-14' } })
+    fireEvent.change(starts[1], { target: { value: '19:00' } })
+    fireEvent.change(ends[1], { target: { value: '21:00' } })
     await user.type(locations[1], 'Ateliê Têxtil')
 
     await user.click(screen.getByRole('button', { name: 'Criar turma' }))

@@ -63,13 +63,8 @@ describe('EnrollmentForm', () => {
       email: 'maria@example.com',
       classId: 'class-id',
     })
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Inscrição recebida',
-    )
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'link para simular o pagamento PIX',
-    )
     expect(onCreated).toHaveBeenCalledOnce()
+    expect(onCreated).toHaveBeenCalledWith('PENDENTE')
   })
 
   it('does not render a form when there are no seats', () => {

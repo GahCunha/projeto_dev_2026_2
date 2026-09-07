@@ -17,6 +17,7 @@ export function getAdminEnrollments(
 
   if (filters.search) params.set('search', filters.search)
   if (filters.status) params.set('status', filters.status)
+  if (filters.paymentStatus) params.set('paymentStatus', filters.paymentStatus)
   if (filters.workshopId) params.set('workshopId', filters.workshopId)
   if (filters.classId) params.set('classId', filters.classId)
 

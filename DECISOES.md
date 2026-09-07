@@ -1,87 +1,65 @@
-# Decisões do Projeto
+# Decisões do projeto
 
-## Tema escolhido
+Este documento registra as escolhas que alteram o comportamento do **Feito à Mão**, seus trade-offs e os limites assumidos na entrega.
 
-**Feito à Mão** é uma plataforma de oficinas artesanais. O visitante escolhe uma oficina e solicita uma inscrição; o administrador gerencia as oficinas e decide se cada inscrição será confirmada ou cancelada.
+## Produto e modelagem
 
-O tema se encaixa na especificação porque as oficinas são as opções gerenciáveis e as inscrições são os registros enviados pelo público.
+Escolhi oficinas artesanais porque o tema conecta o catálogo administrável pedido no desafio a inscrições públicas. Uma oficina representa o conteúdo; cada turma define preço, capacidade e agenda. A turma pode possuir vários encontros, permitindo cursos com mais de um dia sem duplicar a oficina.
 
-## Stack escolhida
+Oficinas e turmas desativadas desaparecem do catálogo público, mas continuam relacionadas às inscrições anteriores. Essa desativação lógica preserva o histórico.
 
-Usamos Node.js, Express, TypeScript, Zod, Prisma, PostgreSQL e Docker Compose.
+## Stack e arquitetura
 
-### O que ganhamos
+Usei React, Vite e Tailwind CSS no frontend; Node.js, Express, TypeScript e Zod na API; Prisma e PostgreSQL nos dados. O Docker Compose inicia a aplicação completa com o mesmo comando em qualquer máquina compatível.
 
-- TypeScript ajuda a detectar incompatibilidades antes da execução.
-- Zod centraliza a validação dos dados recebidos pela API.
-- Prisma fornece migrations, seed e consultas tipadas.
-- Docker Compose torna API e banco reproduzíveis com um comando.
-- PostgreSQL permite usar um banco relacional semelhante ao de um ambiente de produção.
+O backend separa responsabilidades por módulo:
 
-### O que perdemos
+- **Controller**: traduz requisições HTTP em chamadas da aplicação
+- **Schema**: valida entradas com Zod
+- **Service**: concentra regras de negócio
+- **Repository**: acessa o PostgreSQL pelo Prisma
 
-- A configuração inicial é maior do que seria com SQLite.
-- Docker passa a ser um pré-requisito no caminho principal.
-- Express exige integrar manualmente peças que frameworks completos oferecem prontas.
+Essa estrutura facilita localizar regras e testar fluxos. Em troca, exige mais configuração que uma aplicação monolítica com SQLite. Não adotei interfaces ou um contêiner de injeção de dependência porque o tamanho atual não compensaria essa abstração.
 
-## Arquitetura do backend
+## Autenticação
 
-O código é organizado por módulo. Cada módulo pode conter rotas, controller, schemas, service e repository.
+O administrador entra com uma senha protegida por bcrypt. A API armazena o JSON Web Token (JWT) em cookie `httpOnly`, inacessível ao JavaScript do navegador, e encerra sua validade após duas horas.
 
-- **Controller:** traduz HTTP em chamadas da aplicação.
-- **Schema:** valida dados de entrada com Zod.
-- **Service:** aplica regras de negócio.
-- **Repository:** concentra o acesso ao banco com Prisma.
+Essa solução dispensa uma tabela de sessões, mas não revoga individualmente um token antes da expiração. Aceitei esse limite porque a entrega possui um único perfil administrativo e sessões curtas.
 
-Optamos por camadas simples, sem interfaces ou injeção de dependência enquanto elas não trouxerem benefício concreto.
+## Inscrições e vagas
 
-## Autenticação administrativa
+O mesmo e-mail pode se inscrever apenas uma vez em cada turma. Inscrições pendentes e confirmadas ocupam vaga; o cancelamento devolve a vaga.
 
-Usamos senha protegida com bcrypt e JWT armazenado em cookie `httpOnly`. O token expira após duas horas, e o middleware consulta o usuário no banco antes de liberar a rota. O token não é exposto ao JavaScript do frontend nem retornado no corpo da resposta.
+A quantidade disponível não fica duplicada no banco. A API calcula o valor com base na capacidade e nas inscrições ativas. Durante uma inscrição, uma transação bloqueia a turma consultada para impedir que solicitações simultâneas ocupem a última vaga.
 
-Ganhamos uma autenticação simples para uma API separada do frontend, sem manter uma tabela de sessões. Em contrapartida, não temos revogação individual de tokens: o logout remove o cookie do navegador, mas um token copiado permanece válido até expirar enquanto o usuário existir. Para o escopo de um único administrador e sessões curtas, aceitamos essa limitação.
+Uma inscrição pode passar de `PENDENTE` para `CONFIRMADA` ou `CANCELADA`. Uma confirmação ainda pode ser cancelada, mas registros cancelados não são reabertos.
 
-O seed cria um administrador com credenciais configuradas por variáveis de ambiente.
+## Pagamento e e-mail simulados
 
+Turmas pagas geram um pagamento pendente separado do status da inscrição. O participante recebe um link que simula o PIX e o administrador só pode confirmar a inscrição depois desse passo. O Mailpit captura as mensagens, portanto nenhum pagamento ou e-mail real é enviado.
 
-## Ambiguidades decididas até agora
+Os links de pagamento e cancelamento usam tokens aleatórios. O banco armazena apenas os hashes, limitando o impacto de uma eventual exposição dos dados.
 
-### Oficina desativada com inscrições existentes
+## Dados iniciais
 
-A oficina deixa de aparecer para visitantes, mas permanece no banco e continua relacionada às inscrições antigas. Não é apagado do histórico.
+A seed cria um administrador, seis oficinas e suas turmas com datas futuras relativas à execução. Ela não cria inscrições porque registros artificiais ignorariam os fluxos de e-mail, pagamento e cancelamento. Reinícios preservam os dados; a remoção do volume permite repetir a instalação do zero.
 
-### Inscrição duplicada
+## Estratégia de testes
 
-O mesmo e-mail não poderá se inscrever duas vezes na mesma oficina. A restrição também existe no banco para proteger a regra em situações concorrentes.
+Os testes priorizam os fluxos que não podem quebrar: inscrição válida e inválida, bloqueio do painel sem autenticação e mudança de status. A suíte também cobre concorrência pela última vaga, filtros, paginação, catálogo público, pagamento e cancelamento.
 
-### Ocupação das vagas
+## Escopo deixado de fora
 
-Inscrições `PENDENTE` e `CONFIRMADA` ocupam vaga. Uma vaga volta a ficar disponível somente quando a inscrição é `CANCELADA`. Preferimos não receber mais solicitações do que a capacidade anunciada comporta.
+- Pagamento real, pois exigiria um provedor financeiro e credenciais externas
+- Recuperação de senha e múltiplos administradores, pois o desafio exige apenas um painel protegido
+- Lista de espera, histórico de alterações
+- Rate limit e proteção avançada contra spam, adequados a uma aplicação pública real
 
-Na criação, a API abre uma transação e bloqueia somente a linha da oficina consultada enquanto conta a ocupação e grava a inscrição. Requisições para oficinas diferentes continuam independentes; tentativas simultâneas para a última vaga da mesma oficina são serializadas, e apenas uma recebe sucesso.
+## Uso de inteligência artificial
 
-### Transições de status
+Usei inteligência artificial como apoio de desenvolvimento para discutir alternativas, gerar trechos repetitivos e revisar código. O Google Stitch produziu uma referência inicial de identidade visual; usei esse material como direção inicial, adaptei composição, componentes, responsividade, contraste e temas durante a implementação.
 
-Uma inscrição `PENDENTE` pode passar para `CONFIRMADA` ou `CANCELADA`, e uma inscrição `CONFIRMADA` pode passar para `CANCELADA`. Uma inscrição cancelada não pode ser reaberta e nenhuma inscrição volta para `PENDENTE`. Como a pendência já reserva uma vaga, a confirmação não altera a ocupação. A atualização também compara o status atual no banco para detectar alterações concorrentes.
+Também usei skills especializadas durante o trabalho: Playwright para observar a aplicação renderizada em resoluções de desktop e celular, interface design para revisar hierarquia e espaçamento, e napkin para manter orientações recorrentes do projeto.
 
-### Listagem administrativa de oficinas
-
-A área administrativa lista oficinas ativas e inativas, diferentemente da área pública. A consulta aceita busca por título ou local, filtro de atividade e paginação, preparando o contrato necessário para o painel sem expor essas informações na rota pública.
-
-### Edição e desativação de oficinas
-
-Editar dados e alterar o estado ativo são operações separadas. Isso evita desativação acidental em uma edição comum. A capacidade nunca pode ser reduzida abaixo das inscrições pendentes e confirmadas. Desativar uma oficina não remove seus dados ou inscrições, apenas a retira da consulta pública.
-
-### Apresentação pública das oficinas
-
-A API pública omite oficinas inativas ou cuja data já passou. Categoria, URL de capa e materiais ficam armazenados com a oficina e são retornados ao frontend. O filtro visual por categoria será feito inicialmente no frontend.
-
-`availableSeats` não é armazenado no banco. A cada consulta pública, ele é calculado subtraindo da capacidade as inscrições `PENDENTE` e `CONFIRMADA`; inscrições canceladas não ocupam vaga. Isso evita sincronização manual e dados divergentes.
-
-### Datas dos dados iniciais
-
-O seed cria oficinas com datas relativas ao momento da execução. Assim, os dados de demonstração continuam futuros quando o projeto é avaliado.
-
-## Uso de IA
-
-A IA inicialmente foi utilizada para criar a arquitetura básica do projeto, discutir arquitetura, estruturar o projeto e revisar decisões.
+A IA sugeriu popular a seed com muitas oficinas e inscrições prontas. Esses registros poluíam a demonstração e não passavam pelos fluxos de e-mail, PIX e cancelamento. Identifiquei o problema ao testar como participante, reduzi o catálogo para seis oficinas e removi as inscrições artificiais.

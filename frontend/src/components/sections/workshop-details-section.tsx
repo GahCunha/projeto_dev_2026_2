@@ -3,6 +3,7 @@ import { getWorkshopClasses } from '../../services/class-service'
 import { responsiveImageProps } from '../../lib/responsive-image'
 import type { WorkshopClass } from '../../types/workshop-class'
 import type { Workshop } from '../../types/workshop'
+import type { PaymentStatus } from '../../types/enrollment'
 import { ClassPicker } from '../class-picker'
 import { EnrollmentForm } from '../enrollment-form'
 import { Button } from '../ui/button'
@@ -11,7 +12,7 @@ import { ImageFallback } from '../ui/image-fallback'
 type WorkshopDetailsSectionProps = {
   workshop: Workshop
   onClose: () => void
-  onEnrollmentCreated: () => void
+  onEnrollmentCreated: (paymentStatus: PaymentStatus) => void
 }
 
 export function WorkshopDetailsSection({
@@ -60,11 +61,9 @@ export function WorkshopDetailsSection({
     return () => controller.abort()
   }, [workshop.id, requestKey])
 
-  function refreshClasses() {
-    onEnrollmentCreated()
-    setIsLoading(true)
-    setError(null)
-    setRequestKey((current) => current + 1)
+  function finishEnrollment(paymentStatus: PaymentStatus) {
+    onEnrollmentCreated(paymentStatus)
+    closeDialog()
   }
 
   function retryClasses() {
@@ -84,7 +83,7 @@ export function WorkshopDetailsSection({
   return (
     <dialog
       ref={dialogRef}
-      className="m-auto h-dvh max-h-dvh w-full max-w-none overflow-y-auto bg-paper p-0 text-ink shadow-craft backdrop:bg-carbon/70 sm:h-auto sm:max-h-screen sm:w-11/12 sm:max-w-6xl"
+      className="mt-auto mb-0 max-h-[92dvh] w-full max-w-none overflow-hidden border border-b-0 border-rule bg-paper p-0 text-ink shadow-craft backdrop:bg-carbon/70 sm:m-auto sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)] sm:max-w-6xl sm:border-b"
       aria-labelledby="selected-workshop-title"
       onCancel={(event) => {
         event.preventDefault()
@@ -93,7 +92,7 @@ export function WorkshopDetailsSection({
       onClose={onClose}
       onClick={handleBackdropClick}
     >
-      <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-rule bg-light px-4 py-3 sm:px-6">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-light px-4 py-3 sm:px-6">
         <p className="m-0 truncate font-mono text-xs tracking-widest text-muted uppercase">
           Detalhes da oficina
         </p>
@@ -106,9 +105,9 @@ export function WorkshopDetailsSection({
         </Button>
       </div>
 
-      <section className="grid grid-cols-1 gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-10">
+      <section className="grid max-h-[calc(92dvh-3.75rem)] grid-cols-1 gap-7 overflow-y-auto overscroll-contain px-4 py-5 sm:max-h-[calc(100dvh-6.75rem)] sm:px-6 sm:py-7 lg:grid-cols-5 lg:gap-10 lg:px-9 lg:py-8">
         <div className="lg:col-span-3">
-          <div className="relative mb-8 h-64 border border-carbon bg-light p-2 shadow-offset sm:h-80">
+          <div className="relative mb-6 h-48 border border-carbon bg-light p-2 shadow-offset sm:h-64 lg:h-72">
             {workshop.imageUrl ? (
               <img
                 className="block h-full w-full object-cover"
@@ -137,18 +136,18 @@ export function WorkshopDetailsSection({
               {workshop.category}
             </span>
             <h2
-              className="my-3 mb-4 w-full font-display text-4xl leading-none -tracking-wider text-balance text-carbon md:text-5xl"
+              className="my-3 mb-4 w-full font-display text-3xl leading-none -tracking-wider text-balance text-carbon sm:text-4xl md:text-5xl"
               id="selected-workshop-title"
             >
               {workshop.title}
             </h2>
           </div>
 
-          <p className="my-6 text-lg leading-relaxed text-pretty text-muted">
+          <p className="my-5 text-base leading-relaxed text-pretty text-muted sm:text-lg">
             {workshop.description}
           </p>
 
-          <div className="my-8 border-y border-rule py-6">
+          <div className="my-6 border-y border-rule py-5 sm:my-8 sm:py-6">
             {isLoading && (
               <div
                 className="h-40 animate-loading border border-rule loading-surface"
@@ -184,8 +183,8 @@ export function WorkshopDetailsSection({
             )}
           </div>
 
-          <div className="relative mt-10 border border-rule bg-deep px-6 pt-8 pb-5">
-            <span className="absolute -top-3 left-5 bg-paper px-2 py-1 font-mono text-xs tracking-widest text-blue uppercase">
+          <div className="relative mt-8 border border-rule bg-deep px-5 pt-8 pb-5 sm:mt-10 sm:px-6">
+            <span className="absolute -top-3 left-5 bg-paper px-2 py-1 font-mono text-xs tracking-widest text-ochre uppercase">
               Lista de materiais
             </span>
             {workshop.materials.length > 0 ? (
@@ -208,13 +207,13 @@ export function WorkshopDetailsSection({
           </div>
         </div>
 
-        <aside className="relative self-start shadow-craft lg:sticky lg:top-20 lg:col-span-2">
+        <aside className="relative self-start shadow-craft lg:sticky lg:top-0 lg:col-span-2">
           {selectedClass ? (
             <EnrollmentForm
               key={selectedClass.id}
               classId={selectedClass.id}
               hasAvailableSeats={selectedClass.availableSeats > 0}
-              onCreated={refreshClasses}
+              onCreated={finishEnrollment}
             />
           ) : (
             <div className="border border-carbon bg-light p-6 md:p-10">
