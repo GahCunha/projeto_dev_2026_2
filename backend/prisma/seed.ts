@@ -1,4 +1,4 @@
-import { EnrollmentStatus, PaymentStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { env } from "../src/config/environment.js";
 
@@ -511,8 +511,6 @@ const workshops: WorkshopSeed[] = [
   },
 ];
 
-const participantNames = ["Ana Lima", "Bruno Souza", "Carla Mendes"];
-
 const workshopTitlesToSeed = new Set([
   "Crochê: primeiros pontos",
   "Crochê: sua primeira bolsa",
@@ -521,12 +519,6 @@ const workshopTitlesToSeed = new Set([
   "Bordado: desenhando com linha",
   "Costura à mão: nécessaire de tecido",
 ]);
-
-const enrollmentStatuses = [
-  EnrollmentStatus.PENDENTE,
-  EnrollmentStatus.CONFIRMADA,
-  EnrollmentStatus.CANCELADA,
-];
 
 async function run() {
   const passwordHash = await hash(env.ADMIN_PASSWORD, 12);
@@ -605,36 +597,8 @@ async function run() {
     }
   }
 
-  // 4. Cadastra inscrições de demonstração distribuídas entre as turmas
-  for (const [index, name] of participantNames.entries()) {
-    const targetClass = allSavedClasses[index % allSavedClasses.length];
-    if (!targetClass) continue;
-
-    const email = `participante${String(index + 1).padStart(2, "0")}@feitoamao.local`;
-    const status =
-      enrollmentStatuses[index % enrollmentStatuses.length] ??
-      EnrollmentStatus.PENDENTE;
-    const paymentStatus =
-      status === EnrollmentStatus.CANCELADA
-        ? PaymentStatus.CANCELADO
-        : status === EnrollmentStatus.CONFIRMADA
-          ? PaymentStatus.PAGO
-          : PaymentStatus.PENDENTE;
-
-    await prisma.enrollment.create({
-      data: {
-        name,
-        email,
-        status,
-        paymentStatus,
-        classId: targetClass.id,
-        paidAt: status === EnrollmentStatus.CONFIRMADA ? new Date() : null,
-      },
-    });
-  }
-
   console.log(
-    `Seed finalizado com sucesso! ${workshopsToSeed.length} oficinas, ${allSavedClasses.length} turmas e ${participantNames.length} inscrições cadastradas.`,
+    `Seed finalizado com sucesso! ${workshopsToSeed.length} oficinas e ${allSavedClasses.length} turmas cadastradas.`,
   );
 }
 
