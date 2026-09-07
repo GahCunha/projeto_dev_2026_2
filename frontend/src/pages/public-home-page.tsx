@@ -10,6 +10,7 @@ import { WorkGallerySection } from '../components/sections/work-gallery-section'
 import { WorkshopsSection } from '../components/sections/workshops-section'
 import { getWorkshops } from '../services/workshop-service'
 import type { Workshop } from '../types/workshop'
+import type { PaymentStatus } from '../types/enrollment'
 
 export function PublicHomePage() {
   const [workshops, setWorkshops] = useState<Workshop[]>([])
@@ -20,6 +21,7 @@ export function PublicHomePage() {
     null,
   )
   const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [enrollmentNotice, setEnrollmentNotice] = useState<string | null>(null)
 
   const selectedWorkshop = workshops.find(
     (workshop) => workshop.id === selectedWorkshopId,
@@ -41,6 +43,13 @@ export function PublicHomePage() {
     return () => controller.abort()
   }, [requestKey])
 
+  useEffect(() => {
+    if (!enrollmentNotice) return
+
+    const timeout = window.setTimeout(() => setEnrollmentNotice(null), 7000)
+    return () => window.clearTimeout(timeout)
+  }, [enrollmentNotice])
+
   function retry() {
     setError(null)
     setIsLoading(true)
@@ -49,6 +58,15 @@ export function PublicHomePage() {
 
   function selectWorkshop(workshopId: string) {
     setSelectedWorkshopId(workshopId)
+  }
+
+  function handleEnrollmentCreated(paymentStatus: PaymentStatus) {
+    setEnrollmentNotice(
+      paymentStatus === 'PENDENTE'
+        ? 'Inscrição concluída. Confira seu e-mail para simular o pagamento PIX.'
+        : 'Inscrição concluída. A equipe analisará sua participação.',
+    )
+    setRequestKey((currentKey) => currentKey + 1)
   }
 
   return (
@@ -70,14 +88,34 @@ export function PublicHomePage() {
         <WorkGallerySection workshops={workshops} />
       </main>
       <SiteFooter />
+      {enrollmentNotice && (
+        <div
+          className="fixed right-4 bottom-4 z-50 flex w-[calc(100%-2rem)] max-w-md items-start justify-between gap-4 border border-success bg-light px-4 py-3 text-sm text-success shadow-craft sm:right-6 sm:bottom-6"
+          role="status"
+          aria-live="polite"
+        >
+          <div>
+            <strong className="block font-display text-lg text-carbon">
+              Sua vaga foi solicitada
+            </strong>
+            <span>{enrollmentNotice}</span>
+          </div>
+          <button
+            className="grid size-10 shrink-0 place-items-center font-bold text-carbon"
+            type="button"
+            aria-label="Fechar confirmação"
+            onClick={() => setEnrollmentNotice(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
       {selectedWorkshop && (
         <WorkshopDetailsSection
           key={selectedWorkshop.id}
           workshop={selectedWorkshop}
           onClose={() => setSelectedWorkshopId(null)}
-          onEnrollmentCreated={() =>
-            setRequestKey((currentKey) => currentKey + 1)
-          }
+          onEnrollmentCreated={handleEnrollmentCreated}
         />
       )}
     </>

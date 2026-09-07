@@ -3,6 +3,7 @@ import { getWorkshopClasses } from '../../services/class-service'
 import { responsiveImageProps } from '../../lib/responsive-image'
 import type { WorkshopClass } from '../../types/workshop-class'
 import type { Workshop } from '../../types/workshop'
+import type { PaymentStatus } from '../../types/enrollment'
 import { ClassPicker } from '../class-picker'
 import { EnrollmentForm } from '../enrollment-form'
 import { Button } from '../ui/button'
@@ -11,7 +12,7 @@ import { ImageFallback } from '../ui/image-fallback'
 type WorkshopDetailsSectionProps = {
   workshop: Workshop
   onClose: () => void
-  onEnrollmentCreated: () => void
+  onEnrollmentCreated: (paymentStatus: PaymentStatus) => void
 }
 
 export function WorkshopDetailsSection({
@@ -60,11 +61,9 @@ export function WorkshopDetailsSection({
     return () => controller.abort()
   }, [workshop.id, requestKey])
 
-  function refreshClasses() {
-    onEnrollmentCreated()
-    setIsLoading(true)
-    setError(null)
-    setRequestKey((current) => current + 1)
+  function finishEnrollment(paymentStatus: PaymentStatus) {
+    onEnrollmentCreated(paymentStatus)
+    closeDialog()
   }
 
   function retryClasses() {
@@ -214,7 +213,7 @@ export function WorkshopDetailsSection({
               key={selectedClass.id}
               classId={selectedClass.id}
               hasAvailableSeats={selectedClass.availableSeats > 0}
-              onCreated={refreshClasses}
+              onCreated={finishEnrollment}
             />
           ) : (
             <div className="border border-carbon bg-light p-6 md:p-10">

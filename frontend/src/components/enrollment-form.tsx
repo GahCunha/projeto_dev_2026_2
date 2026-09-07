@@ -7,7 +7,7 @@ import { Eyebrow } from './ui/eyebrow'
 type EnrollmentFormProps = {
   classId: string
   hasAvailableSeats: boolean
-  onCreated: () => void
+  onCreated: (paymentStatus: PaymentStatus) => void
 }
 
 export function EnrollmentForm({
@@ -19,7 +19,6 @@ export function EnrollmentForm({
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -34,8 +33,6 @@ export function EnrollmentForm({
 
     setIsSubmitting(true)
     setError(null)
-    setPaymentStatus(undefined)
-
     try {
       const response = await createEnrollment({
         name: normalizedName,
@@ -44,8 +41,7 @@ export function EnrollmentForm({
       })
       setName('')
       setEmail('')
-      setPaymentStatus(response.data.paymentStatus)
-      onCreated()
+      onCreated(response.data.paymentStatus)
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -134,17 +130,6 @@ export function EnrollmentForm({
           aria-live="polite"
         >
           {error}
-        </p>
-      )}
-      {paymentStatus && (
-        <p
-          className="m-0 border-l-3 border-current bg-deep px-4 py-3 text-success"
-          role="status"
-          aria-live="polite"
-        >
-          {paymentStatus === 'PENDENTE'
-            ? 'Inscrição recebida. Enviamos por e-mail o link para simular o pagamento PIX.'
-            : 'Inscrição recebida. Agora ela será analisada pela equipe.'}
         </p>
       )}
     </form>
