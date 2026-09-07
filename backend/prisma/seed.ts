@@ -540,11 +540,13 @@ async function run() {
     },
   });
 
-  // 2. Limpa dados anteriores para garantir que o seed fique limpo e sincronizado
-  await prisma.enrollment.deleteMany();
-  await prisma.classMeeting.deleteMany();
-  await prisma.workshopClass.deleteMany();
-  await prisma.workshop.deleteMany();
+  const workshopCount = await prisma.workshop.count();
+  if (workshopCount > 0) {
+    console.log(
+      `Seed preservada: o catálogo já possui ${workshopCount} oficinas.`,
+    );
+    return;
+  }
 
   const allSavedClasses: Array<{
     id: string;
