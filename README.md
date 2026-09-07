@@ -1,3 +1,193 @@
+<p align="center">
+  <img src="frontend/public/logo-mark.svg" alt="Símbolo do Feito à Mão" width="180" />
+</p>
+
+# Feito à Mão: plataforma de oficinas artesanais
+
+Sistema web full stack com catálogo público, inscrição em oficinas e painel administrativo para gerenciar oficinas, turmas, pagamentos ilustrativos e participantes.
+
+Desenvolvido para o teste técnico de **Desenvolvedor(a) Júnior Full Stack** da Mupi Systems.
+
+> Consulte as justificativas de arquitetura, os recortes de escopo e o uso de inteligência artificial em [Decisões do projeto](DECISOES.md).
+
+## Deploy online
+
+A aplicação está disponível para avaliação nestes endereços:
+
+- **Página pública e painel administrativo**: [abrir aplicação](https://projetodev20262-production.up.railway.app)
+- **Documentação da API**: [abrir Swagger UI](https://projetodev20262-production.up.railway.app/api/docs)
+- **Estado da API**: [abrir health check](https://projetodev20262-production.up.railway.app/api/saude)
+- **E-mails simulados**: [abrir Mailpit](https://mailpit-production-4834.up.railway.app)
+
+**Credenciais do painel**: `admin@feitoamao.com` / `FeitoAMao@2026`
+
+> O ambiente publicado é exclusivamente demonstrativo. O pagamento PIX não movimenta valores reais e os e-mails são capturados pelo Mailpit.
+
+## Início com Docker Compose
+
+Execute PostgreSQL, API, frontend e Mailpit com um comando.
+
+### Pré-requisitos locais
+
+- Git
+- Docker Desktop com Docker Compose
+
+```bash
+git clone https://github.com/GahCunha/projeto_dev_2026_2.git
+cd projeto_dev_2026_2
+docker compose up --build
+```
+
+Na primeira execução, as migrations são aplicadas e a seed cria o administrador, 6 oficinas e suas turmas. Inscrições não são criadas artificialmente: elas devem passar pelo formulário público para receber os links de pagamento e cancelamento por e-mail.
+
+| Serviço | Endereço |
+|---|---|
+| Aplicação | http://localhost:5173 |
+| Painel administrativo | http://localhost:5173/admin |
+| Swagger UI | http://localhost:3333/api/docs |
+| Mailpit | http://localhost:8025 |
+| API | http://localhost:3333 |
+
+Credenciais locais do administrador:
+
+```text
+E-mail: admin@feitoamao.local
+Senha: FeitoAMao@2026
+```
+
+Para encerrar os serviços, use `docker compose down`. Para apagar o banco local e repetir a instalação do zero:
+
+```bash
+docker compose down --volumes
+docker compose up --build
+```
+
+## Roteiro de avaliação
+
+O roteiro pode ser realizado diretamente na demonstração online ou no ambiente local iniciado com Docker:
+
+1. Acesse a página pública e abra uma oficina.
+2. Escolha uma turma, preencha nome e e-mail e envie a inscrição.
+3. Confira a confirmação visual e abra a caixa do Mailpit indicada acima.
+4. Use o link recebido para simular o PIX ou cancelar a inscrição.
+5. Entre no painel administrativo com as credenciais correspondentes ao ambiente escolhido.
+6. Localize a inscrição, teste os filtros e confirme ou cancele o registro.
+7. Crie, edite ou desative uma oficina e confira a mudança na área pública.
+
+O PIX é apenas ilustrativo: nenhum valor real é movimentado e os e-mails ficam restritos ao Mailpit configurado para cada ambiente.
+
+## Funcionalidades
+
+### Área pública
+
+- Catálogo responsivo com somente oficinas e turmas disponíveis.
+- Categorias, imagens, materiais, preços, datas e vagas calculadas.
+- Oficinas com múltiplas turmas e encontros.
+- Inscrição validada no frontend e no backend.
+- Reserva de vaga protegida contra solicitações simultâneas.
+- Pagamento PIX ilustrativo e cancelamento por links seguros enviados por e-mail.
+- Tema claro e escuro.
+
+### Administração
+
+- Login com JWT armazenado em cookie `httpOnly` e logout.
+- Rotas administrativas protegidas.
+- Resumo com pendências, capacidade, ocupação e inscrições recentes.
+- Busca, filtros e paginação de inscrições.
+- Confirmação e cancelamento com feedback imediato.
+- Criação, edição e desativação de oficinas e turmas.
+
+## Tecnologias
+
+| Camada | Tecnologias |
+|---|---|
+| Backend | Node.js 22, Express 4, TypeScript, Prisma 6, Zod, JWT e bcryptjs |
+| Frontend | React 19, Vite, TypeScript, React Router 7 e Tailwind CSS 4 |
+| Dados | PostgreSQL 17, migrations e seed |
+| Testes e qualidade | Vitest, Testing Library, Supertest, ESLint e Prettier |
+| Infraestrutura | Docker, Docker Compose, Nginx, Railway e Mailpit |
+
+## Arquitetura
+
+```text
+projeto_dev_2026_2/
+├── backend/
+│   ├── prisma/          # schema, migrations e seed
+│   ├── src/modules/     # routes, controllers, services e repositories
+│   └── tests/           # testes de integração da API
+├── frontend/
+│   └── src/
+│       ├── components/  # componentes públicos, administrativos e de UI
+│       ├── pages/       # páginas e fluxos da aplicação
+│       ├── services/    # comunicação com a API
+│       └── types/       # contratos TypeScript
+├── compose.yaml
+└── DECISOES.md
+```
+
+No backend, controllers tratam HTTP, schemas validam entradas, services concentram regras de negócio e repositories acessam o PostgreSQL pelo Prisma.
+
+## Testes e qualidade
+
+Com os serviços ativos, execute os testes da API:
+
+```bash
+docker compose exec api npm test
+```
+
+Para validar o frontend localmente:
+
+```bash
+cd frontend
+npm install
+npm run lint
+npm test
+npm run build
+```
+
+Os testes centrais cobrem criação válida e inválida, autenticação, transições de status, concorrência de vagas, listagens, pagamento e cancelamento.
+
+## Desenvolvimento local
+
+Copie `backend/.env.example` para `backend/.env` e `frontend/.env.example` para `frontend/.env`. Depois:
+
+```bash
+docker compose up -d banco mailpit
+
+cd backend
+npm install
+npm run db:deploy
+npm run db:seed
+npm run dev
+```
+
+Em outro terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O Vite informa a porta disponível, normalmente `http://localhost:5173`.
+
+## Documentação complementar
+
+- [Decisões técnicas e de produto](DECISOES.md)
+- [Swagger UI](http://localhost:3333/api/docs), com contratos, exemplos e rotas da API
+- [Variáveis de ambiente do backend](backend/.env.example)
+- [Publicação no Railway](RAILWAY.md)
+
+## Escopo consciente
+
+Não fazem parte desta entrega: pagamentos reais, recuperação de senha, múltiplos perfis administrativos, lista de espera, certificados e aplicativo móvel. As escolhas estão detalhadas no `DECISOES.md`.
+
+---
+
+## Enunciado original do desafio
+
+O conteúdo abaixo foi preservado para manter os requisitos recebidos junto ao projeto.
+
 <img src="logo.png" alt="Mupi Systems Logo" width="200"/>
 
 # Desenvolvedor(a) Júnior Full Stack
