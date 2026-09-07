@@ -34,7 +34,15 @@ app.use(
     customCss: ".swagger-ui .topbar { display: none }",
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+  }),
+);
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
