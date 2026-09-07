@@ -1,4 +1,4 @@
-import { EnrollmentStatus } from "@prisma/client";
+import { EnrollmentStatus, PaymentStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const createEnrollmentSchema = z
@@ -14,6 +14,7 @@ export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;
 export const listEnrollmentsQuerySchema = z
   .object({
     status: z.nativeEnum(EnrollmentStatus).optional(),
+    paymentStatus: z.nativeEnum(PaymentStatus).optional(),
     workshopId: z.string().uuid("Identificador de oficina inválido").optional(),
     classId: z.string().uuid("Identificador de turma inválido").optional(),
     search: z.string().trim().max(120).optional(),

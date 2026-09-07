@@ -18,7 +18,8 @@ export const enrollmentRepository = {
       const lockedClasses = await transaction.$queryRaw<Array<{ id: string }>>`
         SELECT "id" FROM "turmas" WHERE "id" = ${classId} FOR UPDATE
       `;
-      if (lockedClasses.length === 0) return { outcome: "unavailable" } as const;
+      if (lockedClasses.length === 0)
+        return { outcome: "unavailable" } as const;
 
       const workshopClass = await transaction.workshopClass.findUnique({
         where: { id: classId },
@@ -28,8 +29,15 @@ export const enrollmentRepository = {
         },
       });
 
-      const firstFutureMeeting = workshopClass?.meetings.find((meeting) => meeting.startsAt > new Date());
-      if (!workshopClass || !workshopClass.active || !workshopClass.workshop.active || !firstFutureMeeting) {
+      const firstFutureMeeting = workshopClass?.meetings.find(
+        (meeting) => meeting.startsAt > new Date(),
+      );
+      if (
+        !workshopClass ||
+        !workshopClass.active ||
+        !workshopClass.workshop.active ||
+        !firstFutureMeeting
+      ) {
         return { outcome: "unavailable" } as const;
       }
 
@@ -40,7 +48,8 @@ export const enrollmentRepository = {
         },
       });
 
-      if (occupiedSeats >= workshopClass.capacity) return { outcome: "full" } as const;
+      if (occupiedSeats >= workshopClass.capacity)
+        return { outcome: "full" } as const;
 
       const enrollment = await transaction.enrollment.create({
         data: {
@@ -51,7 +60,9 @@ export const enrollmentRepository = {
           paymentStatus: workshopClass.price.greaterThan(0)
             ? PaymentStatus.PENDENTE
             : PaymentStatus.ISENTO,
-          paymentTokenHash: workshopClass.price.greaterThan(0) ? paymentTokenHash : null,
+          paymentTokenHash: workshopClass.price.greaterThan(0)
+            ? paymentTokenHash
+            : null,
           cancellationTokenHash,
         },
         select: {
@@ -80,79 +91,97 @@ export const enrollmentRepository = {
   },
 
   findById(id: string) {
-    return prisma.enrollment.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        paymentStatus: true,
-        classId: true,
-        class: {
-          select: {
-            name: true,
-            price: true,
-            meetings: { orderBy: { startsAt: "asc" } },
-            workshop: { select: { title: true } },
+    return prisma.enrollment
+      .findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          paymentStatus: true,
+          classId: true,
+          class: {
+            select: {
+              name: true,
+              price: true,
+              meetings: { orderBy: { startsAt: "asc" } },
+              workshop: { select: { title: true } },
+            },
           },
         },
-      },
-    }).then((enrollment) => enrollment ? {
-      ...enrollment,
-      workshop: enrollment.class.workshop,
-      class: { ...enrollment.class, workshop: undefined },
-    } : null);
+      })
+      .then((enrollment) =>
+        enrollment
+          ? {
+              ...enrollment,
+              workshop: enrollment.class.workshop,
+              class: { ...enrollment.class, workshop: undefined },
+            }
+          : null,
+      );
   },
 
   findByCancellationTokenHash(cancellationTokenHash: string) {
-    return prisma.enrollment.findUnique({
-      where: { cancellationTokenHash },
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        paymentStatus: true,
-        class: {
-          select: {
-            name: true,
-            price: true,
-            meetings: { orderBy: { startsAt: "asc" } },
-            workshop: { select: { title: true } },
+    return prisma.enrollment
+      .findUnique({
+        where: { cancellationTokenHash },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          paymentStatus: true,
+          class: {
+            select: {
+              name: true,
+              price: true,
+              meetings: { orderBy: { startsAt: "asc" } },
+              workshop: { select: { title: true } },
+            },
           },
         },
-      },
-    }).then((enrollment) => enrollment ? {
-      ...enrollment,
-      workshop: enrollment.class.workshop,
-      class: { ...enrollment.class, workshop: undefined },
-    } : null);
+      })
+      .then((enrollment) =>
+        enrollment
+          ? {
+              ...enrollment,
+              workshop: enrollment.class.workshop,
+              class: { ...enrollment.class, workshop: undefined },
+            }
+          : null,
+      );
   },
 
   findByPaymentTokenHash(paymentTokenHash: string) {
-    return prisma.enrollment.findUnique({
-      where: { paymentTokenHash },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-        paymentStatus: true,
-        paidAt: true,
-        class: {
-          select: {
-            name: true,
-            price: true,
-            meetings: { orderBy: { startsAt: "asc" } },
-            workshop: { select: { title: true } },
+    return prisma.enrollment
+      .findUnique({
+        where: { paymentTokenHash },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          paymentStatus: true,
+          paidAt: true,
+          class: {
+            select: {
+              name: true,
+              price: true,
+              meetings: { orderBy: { startsAt: "asc" } },
+              workshop: { select: { title: true } },
+            },
           },
         },
-      },
-    }).then((enrollment) => enrollment ? {
-      ...enrollment,
-      workshop: enrollment.class.workshop,
-      class: { ...enrollment.class, workshop: undefined },
-    } : null);
+      })
+      .then((enrollment) =>
+        enrollment
+          ? {
+              ...enrollment,
+              workshop: enrollment.class.workshop,
+              class: { ...enrollment.class, workshop: undefined },
+            }
+          : null,
+      );
   },
 
   async markPaymentAsPaid(paymentTokenHash: string) {
@@ -173,9 +202,14 @@ export const enrollmentRepository = {
     const result = await prisma.enrollment.updateMany({
       where: {
         cancellationTokenHash,
-        status: { in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA] },
+        status: {
+          in: [EnrollmentStatus.PENDENTE, EnrollmentStatus.CONFIRMADA],
+        },
       },
-      data: { status: EnrollmentStatus.CANCELADA },
+      data: {
+        status: EnrollmentStatus.CANCELADA,
+        paymentStatus: PaymentStatus.CANCELADO,
+      },
     });
 
     if (result.count === 0) return null;
@@ -189,7 +223,13 @@ export const enrollmentRepository = {
   ) {
     const result = await prisma.enrollment.updateMany({
       where: { id, status: currentStatus },
-      data: { status },
+      data: {
+        status,
+        paymentStatus:
+          status === EnrollmentStatus.CANCELADA
+            ? PaymentStatus.CANCELADO
+            : undefined,
+      },
     });
 
     if (result.count === 0) {
@@ -214,6 +254,7 @@ export const enrollmentRepository = {
   async list(query: ListEnrollmentsQuery) {
     const where: Prisma.EnrollmentWhereInput = {
       status: query.status,
+      paymentStatus: query.paymentStatus,
       class: query.workshopId ? { workshopId: query.workshopId } : undefined,
       classId: query.classId,
       OR: query.search

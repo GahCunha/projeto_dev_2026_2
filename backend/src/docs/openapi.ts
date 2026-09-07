@@ -53,7 +53,8 @@ export const openApiDocument = {
           category: { type: "string", example: "Carpintaria" },
           description: {
             type: "string",
-            example: "Aprenda técnicas fundamentais e construa sua primeira peça em madeira.",
+            example:
+              "Aprenda técnicas fundamentais e construa sua primeira peça em madeira.",
           },
           imageUrl: {
             type: "string",
@@ -67,7 +68,11 @@ export const openApiDocument = {
             items: { type: "string" },
             example: ["Avental", "Óculos de proteção"],
           },
-          nextMeetingAt: { type: "string", format: "date-time", nullable: true },
+          nextMeetingAt: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+          },
           classCount: { type: "integer", minimum: 0, example: 2 },
           totalCapacity: { type: "integer", minimum: 0, example: 24 },
           occupiedSeats: { type: "integer", minimum: 0, example: 8 },
@@ -78,8 +83,18 @@ export const openApiDocument = {
             description:
               "Capacidade menos inscrições pendentes e confirmadas; calculada no momento da consulta.",
           },
-          minimumPrice: { type: "number", minimum: 0, nullable: true, example: 85.5 },
-          maximumPrice: { type: "number", minimum: 0, nullable: true, example: 120 },
+          minimumPrice: {
+            type: "number",
+            minimum: 0,
+            nullable: true,
+            example: 85.5,
+          },
+          maximumPrice: {
+            type: "number",
+            minimum: 0,
+            nullable: true,
+            example: 120,
+          },
           active: { type: "boolean", example: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
@@ -95,17 +110,20 @@ export const openApiDocument = {
               enrollmentCount: {
                 type: "integer",
                 minimum: 0,
-                description: "Quantidade total de inscrições, inclusive canceladas.",
+                description:
+                  "Quantidade total de inscrições, inclusive canceladas.",
               },
               occupiedSeats: {
                 type: "integer",
                 minimum: 0,
-                description: "Inscrições pendentes e confirmadas que reservam vaga.",
+                description:
+                  "Inscrições pendentes e confirmadas que reservam vaga.",
               },
               availableSeats: {
                 type: "integer",
                 minimum: 0,
-                description: "Capacidade restante após descontar as vagas ocupadas.",
+                description:
+                  "Capacidade restante após descontar as vagas ocupadas.",
               },
             },
           },
@@ -124,15 +142,28 @@ export const openApiDocument = {
       WorkshopClass: {
         type: "object",
         required: [
-          "id", "workshopId", "name", "capacity", "price", "active",
-          "meetings", "occupiedSeats", "availableSeats",
+          "id",
+          "workshopId",
+          "name",
+          "capacity",
+          "price",
+          "active",
+          "meetings",
+          "occupiedSeats",
+          "availableSeats",
         ],
         properties: {
           id: { type: "string", format: "uuid" },
           workshopId: { type: "string", format: "uuid" },
           name: { type: "string", example: "Turma noturna de setembro" },
           capacity: { type: "integer", minimum: 1, example: 12 },
-          price: { type: "number", format: "double", minimum: 0, multipleOf: 0.01, example: 120 },
+          price: {
+            type: "number",
+            format: "double",
+            minimum: 0,
+            multipleOf: 0.01,
+            example: 120,
+          },
           active: { type: "boolean", example: true },
           meetings: {
             type: "array",
@@ -149,7 +180,13 @@ export const openApiDocument = {
         properties: {
           name: { type: "string", minLength: 3, maxLength: 100 },
           capacity: { type: "integer", minimum: 1, maximum: 500 },
-          price: { type: "number", format: "double", minimum: 0, multipleOf: 0.01, example: 120 },
+          price: {
+            type: "number",
+            format: "double",
+            minimum: 0,
+            multipleOf: 0.01,
+            example: 120,
+          },
           active: { type: "boolean" },
           meetings: {
             type: "array",
@@ -169,11 +206,24 @@ export const openApiDocument = {
       },
       Enrollment: {
         type: "object",
-        required: ["id", "name", "email", "status", "paymentStatus", "classId", "createdAt", "updatedAt"],
+        required: [
+          "id",
+          "name",
+          "email",
+          "status",
+          "paymentStatus",
+          "classId",
+          "createdAt",
+          "updatedAt",
+        ],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
-          email: { type: "string", format: "email", example: "maria@example.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "maria@example.com",
+          },
           status: {
             type: "string",
             enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
@@ -181,7 +231,7 @@ export const openApiDocument = {
           },
           paymentStatus: {
             type: "string",
-            enum: ["ISENTO", "PENDENTE", "PAGO"],
+            enum: ["ISENTO", "PENDENTE", "PAGO", "CANCELADO"],
             example: "PENDENTE",
           },
           classId: { type: "string", format: "uuid" },
@@ -201,7 +251,10 @@ export const openApiDocument = {
                 required: ["id", "title", "active"],
                 properties: {
                   id: { type: "string", format: "uuid" },
-                  title: { type: "string", example: "Crochê: primeiros pontos" },
+                  title: {
+                    type: "string",
+                    example: "Crochê: primeiros pontos",
+                  },
                   active: { type: "boolean" },
                 },
               },
@@ -212,7 +265,14 @@ export const openApiDocument = {
       },
       EnrollmentCancellation: {
         type: "object",
-        required: ["id", "name", "status", "paymentStatus", "workshop", "class"],
+        required: [
+          "id",
+          "name",
+          "status",
+          "paymentStatus",
+          "workshop",
+          "class",
+        ],
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Maria Artesã" },
@@ -220,7 +280,10 @@ export const openApiDocument = {
             type: "string",
             enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
           },
-          paymentStatus: { type: "string", enum: ["ISENTO", "PENDENTE", "PAGO"] },
+          paymentStatus: {
+            type: "string",
+            enum: ["ISENTO", "PENDENTE", "PAGO", "CANCELADO"],
+          },
           workshop: {
             type: "object",
             required: ["title"],
@@ -234,7 +297,10 @@ export const openApiDocument = {
             properties: {
               name: { type: "string" },
               price: { type: "number", format: "decimal" },
-              meetings: { type: "array", items: { $ref: "#/components/schemas/ClassMeeting" } },
+              meetings: {
+                type: "array",
+                items: { $ref: "#/components/schemas/ClassMeeting" },
+              },
             },
           },
         },
@@ -244,8 +310,14 @@ export const openApiDocument = {
         required: ["name", "status", "paymentStatus", "workshop", "class"],
         properties: {
           name: { type: "string", example: "Maria Artesã" },
-          status: { type: "string", enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"] },
-          paymentStatus: { type: "string", enum: ["PENDENTE", "PAGO"] },
+          status: {
+            type: "string",
+            enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
+          },
+          paymentStatus: {
+            type: "string",
+            enum: ["PENDENTE", "PAGO", "CANCELADO"],
+          },
           paidAt: { type: "string", format: "date-time", nullable: true },
           workshop: {
             type: "object",
@@ -270,7 +342,11 @@ export const openApiDocument = {
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Administrador" },
-          email: { type: "string", format: "email", example: "admin@feitoamao.local" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "admin@feitoamao.local",
+          },
         },
       },
       CreateEnrollmentInput: {
@@ -278,7 +354,12 @@ export const openApiDocument = {
         additionalProperties: false,
         required: ["name", "email", "classId"],
         properties: {
-          name: { type: "string", minLength: 3, maxLength: 120, example: "Maria Artesã" },
+          name: {
+            type: "string",
+            minLength: 3,
+            maxLength: 120,
+            example: "Maria Artesã",
+          },
           email: {
             type: "string",
             format: "email",
@@ -291,19 +372,26 @@ export const openApiDocument = {
       CreateWorkshopInput: {
         type: "object",
         additionalProperties: false,
-        required: [
-          "title",
-          "category",
-          "description",
-        ],
+        required: ["title", "category", "description"],
         properties: {
-          title: { type: "string", minLength: 3, maxLength: 120, example: "Cerâmica fria" },
-          category: { type: "string", minLength: 2, maxLength: 80, example: "Modelagem" },
+          title: {
+            type: "string",
+            minLength: 3,
+            maxLength: 120,
+            example: "Cerâmica fria",
+          },
+          category: {
+            type: "string",
+            minLength: 2,
+            maxLength: 80,
+            example: "Modelagem",
+          },
           description: {
             type: "string",
             minLength: 10,
             maxLength: 1000,
-            example: "Aprenda a modelar e finalizar pequenas peças decorativas.",
+            example:
+              "Aprenda a modelar e finalizar pequenas peças decorativas.",
           },
           imageUrl: {
             type: "string",
@@ -328,7 +416,12 @@ export const openApiDocument = {
           title: { type: "string", minLength: 3, maxLength: 120 },
           category: { type: "string", minLength: 2, maxLength: 80 },
           description: { type: "string", minLength: 10, maxLength: 1000 },
-          imageUrl: { type: "string", format: "uri", nullable: true, maxLength: 2048 },
+          imageUrl: {
+            type: "string",
+            format: "uri",
+            nullable: true,
+            maxLength: 2048,
+          },
           materials: {
             type: "array",
             maxItems: 20,
@@ -356,13 +449,41 @@ export const openApiDocument = {
           },
         },
       },
+      DashboardSummary: {
+        type: "object",
+        required: ["metrics", "occupancyByWorkshop", "recentEnrollments"],
+        properties: {
+          metrics: {
+            type: "object",
+            properties: {
+              activeWorkshops: { type: "integer" },
+              upcomingClasses: { type: "integer" },
+              totalCapacity: { type: "integer" },
+              occupiedSeats: { type: "integer" },
+              availableSeats: { type: "integer" },
+              pendingEnrollments: { type: "integer" },
+              pendingPayments: { type: "integer" },
+            },
+          },
+          occupancyByWorkshop: { type: "array", items: { type: "object" } },
+          recentEnrollments: { type: "array", items: { type: "object" } },
+        },
+      },
       LoginInput: {
         type: "object",
         additionalProperties: false,
         required: ["email", "password"],
         properties: {
-          email: { type: "string", format: "email", example: "admin@feitoamao.local" },
-          password: { type: "string", format: "password", example: "FeitoAMao@2026" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "admin@feitoamao.local",
+          },
+          password: {
+            type: "string",
+            format: "password",
+            example: "FeitoAMao@2026",
+          },
         },
       },
       Error: {
@@ -370,7 +491,10 @@ export const openApiDocument = {
         required: ["error", "message"],
         properties: {
           error: { type: "string", example: "INVALID_DATA" },
-          message: { type: "string", example: "Os dados enviados são inválidos." },
+          message: {
+            type: "string",
+            example: "Os dados enviados são inválidos.",
+          },
           fields: {
             type: "object",
             additionalProperties: {
@@ -385,18 +509,45 @@ export const openApiDocument = {
       InvalidData: {
         description: "Dados inválidos",
         content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+          "application/json": {
+            schema: { $ref: "#/components/schemas/Error" },
+          },
         },
       },
       Unauthenticated: {
         description: "Sessão ausente, inválida ou expirada",
         content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+          "application/json": {
+            schema: { $ref: "#/components/schemas/Error" },
+          },
         },
       },
     },
   },
   paths: {
+    "/api/admin/resumo": {
+      get: {
+        tags: ["Administração"],
+        summary: "Retorna o resumo operacional do painel",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          "200": {
+            description: "Métricas, ocupação por oficina e inscrições recentes",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/DashboardSummary" },
+                  },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthenticated" },
+        },
+      },
+    },
     "/api/saude": {
       get: {
         tags: ["Sistema"],
@@ -433,7 +584,10 @@ export const openApiDocument = {
                 schema: {
                   type: "object",
                   properties: {
-                    data: { type: "array", items: { $ref: "#/components/schemas/Workshop" } },
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Workshop" },
+                    },
                   },
                 },
               },
@@ -461,7 +615,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Workshop" },
+                  },
                 },
               },
             },
@@ -469,7 +625,9 @@ export const openApiDocument = {
           "404": {
             description: "Oficina não encontrada ou inativa",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -480,13 +638,39 @@ export const openApiDocument = {
       get: {
         tags: ["Turmas"],
         summary: "Lista as turmas disponíveis de uma oficina",
-        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          {
+            name: "workshopId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
         responses: {
           "200": {
             description: "Turmas ativas com aulas futuras e vagas calculadas",
-            content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/WorkshopClass" },
+                    },
+                  },
+                },
+              },
+            },
           },
-          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Oficina não encontrada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -495,10 +679,36 @@ export const openApiDocument = {
       get: {
         tags: ["Turmas"],
         summary: "Consulta uma turma disponível",
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
         responses: {
-          "200": { description: "Turma encontrada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
-          "404": { description: "Turma não encontrada ou inativa", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "200": {
+            description: "Turma encontrada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/WorkshopClass" },
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Turma não encontrada ou inativa",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -510,7 +720,9 @@ export const openApiDocument = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/CreateEnrollmentInput" } },
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateEnrollmentInput" },
+            },
           },
         },
         responses: {
@@ -520,7 +732,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Enrollment" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Enrollment" },
+                  },
                 },
               },
             },
@@ -528,7 +742,9 @@ export const openApiDocument = {
           "409": {
             description: "Inscrição duplicada ou oficina lotada",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -554,7 +770,11 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/EnrollmentCancellation" } },
+                  properties: {
+                    data: {
+                      $ref: "#/components/schemas/EnrollmentCancellation",
+                    },
+                  },
                 },
               },
             },
@@ -562,7 +782,9 @@ export const openApiDocument = {
           "404": {
             description: "Link inválido ou desconhecido",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -586,7 +808,11 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/EnrollmentCancellation" } },
+                  properties: {
+                    data: {
+                      $ref: "#/components/schemas/EnrollmentCancellation",
+                    },
+                  },
                 },
               },
             },
@@ -594,13 +820,17 @@ export const openApiDocument = {
           "404": {
             description: "Link inválido ou desconhecido",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "409": {
             description: "Inscrição já cancelada ou alterada simultaneamente",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -611,27 +841,81 @@ export const openApiDocument = {
       get: {
         tags: ["Inscrições"],
         summary: "Consulta uma cobrança PIX ilustrativa",
-        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string", pattern: "^[a-f0-9]{64}$" } }],
+        parameters: [
+          {
+            name: "token",
+            in: "path",
+            required: true,
+            schema: { type: "string", pattern: "^[a-f0-9]{64}$" },
+          },
+        ],
         responses: {
           "200": {
             description: "Dados seguros da cobrança",
-            content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/EnrollmentPayment" } } } } },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/EnrollmentPayment" },
+                  },
+                },
+              },
+            },
           },
-          "404": { description: "Link inválido ou desconhecido", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Link inválido ou desconhecido",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
       post: {
         tags: ["Inscrições"],
         summary: "Simula o pagamento PIX sem movimentação financeira real",
-        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string", pattern: "^[a-f0-9]{64}$" } }],
+        parameters: [
+          {
+            name: "token",
+            in: "path",
+            required: true,
+            schema: { type: "string", pattern: "^[a-f0-9]{64}$" },
+          },
+        ],
         responses: {
           "200": {
-            description: "Pagamento marcado como pago; inscrição permanece pendente",
-            content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/EnrollmentPayment" } } } } },
+            description:
+              "Pagamento marcado como pago; inscrição permanece pendente",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/EnrollmentPayment" },
+                  },
+                },
+              },
+            },
           },
-          "404": { description: "Link inválido ou desconhecido", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "409": { description: "Pagamento já registrado ou inscrição cancelada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Link inválido ou desconhecido",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "409": {
+            description: "Pagamento já registrado ou inscrição cancelada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -643,7 +927,9 @@ export const openApiDocument = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/LoginInput" } },
+            "application/json": {
+              schema: { $ref: "#/components/schemas/LoginInput" },
+            },
           },
         },
         responses: {
@@ -667,7 +953,9 @@ export const openApiDocument = {
           "401": {
             description: "Credenciais inválidas",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -711,13 +999,24 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Lista inscrições para gestão",
         description:
-          "Retorna inscrições paginadas e ordenadas pela data da oficina. Permite busca case-insensitive por nome ou e-mail e filtros por status e oficina.",
+          "Retorna inscrições paginadas e ordenadas pela data da oficina. Permite busca case-insensitive por nome ou e-mail e filtros por status da inscrição, pagamento e oficina.",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "status",
             in: "query",
-            schema: { type: "string", enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"] },
+            schema: {
+              type: "string",
+              enum: ["PENDENTE", "CONFIRMADA", "CANCELADA"],
+            },
+          },
+          {
+            name: "paymentStatus",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["ISENTO", "PENDENTE", "PAGO", "CANCELADO"],
+            },
           },
           {
             name: "workshopId",
@@ -750,7 +1049,9 @@ export const openApiDocument = {
                   properties: {
                     data: {
                       type: "array",
-                      items: { $ref: "#/components/schemas/EnrollmentWithWorkshop" },
+                      items: {
+                        $ref: "#/components/schemas/EnrollmentWithWorkshop",
+                      },
                     },
                     pagination: { $ref: "#/components/schemas/Pagination" },
                   },
@@ -772,7 +1073,11 @@ export const openApiDocument = {
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: "active", in: "query", schema: { type: "boolean" } },
-          { name: "search", in: "query", schema: { type: "string", maxLength: 120 } },
+          {
+            name: "search",
+            in: "query",
+            schema: { type: "string", maxLength: 120 },
+          },
           {
             name: "page",
             in: "query",
@@ -813,7 +1118,9 @@ export const openApiDocument = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/CreateWorkshopInput" } },
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateWorkshopInput" },
+            },
           },
         },
         responses: {
@@ -823,7 +1130,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Workshop" },
+                  },
                 },
               },
             },
@@ -851,7 +1160,9 @@ export const openApiDocument = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/UpdateWorkshopInput" } },
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateWorkshopInput" },
+            },
           },
         },
         responses: {
@@ -861,7 +1172,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Workshop" },
+                  },
                 },
               },
             },
@@ -870,13 +1183,17 @@ export const openApiDocument = {
           "404": {
             description: "Oficina não encontrada",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "409": {
             description: "Capacidade menor que a ocupação atual",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -900,7 +1217,9 @@ export const openApiDocument = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateWorkshopStatusInput" },
+              schema: {
+                $ref: "#/components/schemas/UpdateWorkshopStatusInput",
+              },
             },
           },
         },
@@ -911,7 +1230,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Workshop" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Workshop" },
+                  },
                 },
               },
             },
@@ -920,13 +1241,17 @@ export const openApiDocument = {
           "404": {
             description: "Oficina não encontrada",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "409": {
             description: "A oficina já possui o status solicitado",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },
@@ -938,23 +1263,85 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Lista todas as turmas de uma oficina",
         security: [{ cookieAuth: [] }],
-        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        parameters: [
+          {
+            name: "workshopId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
         responses: {
-          "200": { description: "Turmas ativas e inativas", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/WorkshopClass" } } } } } } },
+          "200": {
+            description: "Turmas ativas e inativas",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/WorkshopClass" },
+                    },
+                  },
+                },
+              },
+            },
+          },
           "401": { $ref: "#/components/responses/Unauthenticated" },
-          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Oficina não encontrada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
       post: {
         tags: ["Administração"],
         summary: "Cria uma turma com uma ou mais aulas",
         security: [{ cookieAuth: [] }],
-        parameters: [{ name: "workshopId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
-        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/ClassInput" } } } },
+        parameters: [
+          {
+            name: "workshopId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ClassInput" },
+            },
+          },
+        },
         responses: {
-          "201": { description: "Turma criada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "201": {
+            description: "Turma criada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/WorkshopClass" },
+                  },
+                },
+              },
+            },
+          },
           "401": { $ref: "#/components/responses/Unauthenticated" },
-          "404": { description: "Oficina não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Oficina não encontrada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -964,13 +1351,53 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Edita dados e aulas de uma turma",
         security: [{ cookieAuth: [] }],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
-        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/ClassInput" } } } },
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ClassInput" },
+            },
+          },
+        },
         responses: {
-          "200": { description: "Turma atualizada", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "200": {
+            description: "Turma atualizada",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/WorkshopClass" },
+                  },
+                },
+              },
+            },
+          },
           "401": { $ref: "#/components/responses/Unauthenticated" },
-          "404": { description: "Turma não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "409": { description: "Capacidade menor que a ocupação", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Turma não encontrada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "409": {
+            description: "Capacidade menor que a ocupação",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -980,13 +1407,55 @@ export const openApiDocument = {
         tags: ["Administração"],
         summary: "Ativa ou desativa uma turma",
         security: [{ cookieAuth: [] }],
-        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
-        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UpdateWorkshopStatusInput" } } } },
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/UpdateWorkshopStatusInput",
+              },
+            },
+          },
+        },
         responses: {
-          "200": { description: "Status atualizado", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/WorkshopClass" } } } } } },
+          "200": {
+            description: "Status atualizado",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: { $ref: "#/components/schemas/WorkshopClass" },
+                  },
+                },
+              },
+            },
+          },
           "401": { $ref: "#/components/responses/Unauthenticated" },
-          "404": { description: "Turma não encontrada", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "409": { description: "A turma já possui o status solicitado", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "404": {
+            description: "Turma não encontrada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "409": {
+            description: "A turma já possui o status solicitado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
           "422": { $ref: "#/components/responses/InvalidData" },
         },
       },
@@ -1010,7 +1479,9 @@ export const openApiDocument = {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/UpdateEnrollmentStatusInput" },
+              schema: {
+                $ref: "#/components/schemas/UpdateEnrollmentStatusInput",
+              },
             },
           },
         },
@@ -1021,7 +1492,9 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { data: { $ref: "#/components/schemas/Enrollment" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/Enrollment" },
+                  },
                 },
               },
             },
@@ -1030,13 +1503,18 @@ export const openApiDocument = {
           "404": {
             description: "Inscrição não encontrada",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "409": {
-            description: "Transição inválida, status repetido ou alteração concorrente",
+            description:
+              "Transição inválida, status repetido ou alteração concorrente",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
             },
           },
           "422": { $ref: "#/components/responses/InvalidData" },

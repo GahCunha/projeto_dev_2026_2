@@ -5,8 +5,15 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { openApiDocument } from "./docs/openapi.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
-import { adminClassRoutes, adminWorkshopClassRoutes } from "./modules/classes/class.admin.routes.js";
-import { publicClassRoutes, publicWorkshopClassRoutes } from "./modules/classes/class.routes.js";
+import {
+  adminClassRoutes,
+  adminWorkshopClassRoutes,
+} from "./modules/classes/class.admin.routes.js";
+import {
+  publicClassRoutes,
+  publicWorkshopClassRoutes,
+} from "./modules/classes/class.routes.js";
+import { dashboardRoutes } from "./modules/dashboard/dashboard.routes.js";
 import { adminEnrollmentRoutes } from "./modules/enrollments/enrollment.admin.routes.js";
 import { publicEnrollmentRoutes } from "./modules/enrollments/enrollment.routes.js";
 import { errorHandler } from "./shared/middleware/error-handler.js";
@@ -38,13 +45,16 @@ app.use("/api/oficinas/:workshopId/turmas", publicWorkshopClassRoutes);
 app.use("/api/turmas", publicClassRoutes);
 app.use("/api/inscricoes", publicEnrollmentRoutes);
 app.use("/api/admin/auth", authRoutes);
+app.use("/api/admin/resumo", dashboardRoutes);
 app.use("/api/admin/inscricoes", adminEnrollmentRoutes);
 app.use("/api/admin/oficinas", adminWorkshopRoutes);
 app.use("/api/admin/oficinas/:workshopId/turmas", adminWorkshopClassRoutes);
 app.use("/api/admin/turmas", adminClassRoutes);
 
 app.use((_req, res) => {
-  res.status(404).json({ error: "ROUTE_NOT_FOUND", message: "Rota não encontrada." });
+  res
+    .status(404)
+    .json({ error: "ROUTE_NOT_FOUND", message: "Rota não encontrada." });
 });
 
 app.use(errorHandler);

@@ -9,6 +9,7 @@ const styles = cva(
         ISENTO: 'border-rule bg-light text-muted',
         PENDENTE: 'border-ochre/25 bg-saffron/15 text-ochre',
         PAGO: 'border-success/25 bg-success/10 text-success',
+        CANCELADO: 'border-danger/25 bg-danger/10 text-danger',
       },
     },
   },
@@ -18,6 +19,7 @@ const labels: Record<PaymentStatus, string> = {
   ISENTO: 'Gratuita',
   PENDENTE: 'Aguardando',
   PAGO: 'Pago',
+  CANCELADO: 'Cancelado',
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

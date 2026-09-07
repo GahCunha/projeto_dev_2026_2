@@ -9,7 +9,7 @@ export type Enrollment = {
   name: string
   email: string
   status: 'PENDENTE' | 'CONFIRMADA' | 'CANCELADA'
-  paymentStatus: 'ISENTO' | 'PENDENTE' | 'PAGO'
+  paymentStatus: 'ISENTO' | 'PENDENTE' | 'PAGO' | 'CANCELADO'
   classId: string
   createdAt: string
   updatedAt: string
@@ -59,6 +59,7 @@ export type AdminEnrollmentsResponse = {
 export type AdminEnrollmentFilters = {
   search?: string
   status?: EnrollmentStatus
+  paymentStatus?: PaymentStatus
   workshopId?: string
   classId?: string
   page: number

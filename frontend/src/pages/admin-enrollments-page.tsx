@@ -14,12 +14,19 @@ import type {
   AdminEnrollment,
   EnrollmentPagination,
   EnrollmentStatus,
+  PaymentStatus,
 } from '../types/enrollment'
 
 const validStatuses: EnrollmentStatus[] = [
   'PENDENTE',
   'CONFIRMADA',
   'CANCELADA',
+]
+const validPaymentStatuses: PaymentStatus[] = [
+  'ISENTO',
+  'PENDENTE',
+  'PAGO',
+  'CANCELADO',
 ]
 type NextEnrollmentStatus = Extract<
   EnrollmentStatus,
@@ -43,6 +50,13 @@ export function AdminEnrollmentsPage() {
   const statusParam = searchParams.get('status') as EnrollmentStatus | null
   const status =
     statusParam && validStatuses.includes(statusParam) ? statusParam : undefined
+  const paymentStatusParam = searchParams.get(
+    'paymentStatus',
+  ) as PaymentStatus | null
+  const paymentStatus =
+    paymentStatusParam && validPaymentStatuses.includes(paymentStatusParam)
+      ? paymentStatusParam
+      : undefined
   const workshopId = searchParams.get('workshopId') ?? undefined
   const workshopTitle = searchParams.get('workshopTitle') ?? undefined
   const classId = searchParams.get('classId') ?? undefined
@@ -66,7 +80,14 @@ export function AdminEnrollmentsPage() {
     const controller = new AbortController()
 
     getAdminEnrollments(
-      { search: search || undefined, status, workshopId, classId, page },
+      {
+        search: search || undefined,
+        status,
+        paymentStatus,
+        workshopId,
+        classId,
+        page,
+      },
       controller.signal,
     )
       .then((response) => {
@@ -86,7 +107,7 @@ export function AdminEnrollmentsPage() {
       })
 
     return () => controller.abort()
-  }, [classId, page, requestKey, search, status, workshopId])
+  }, [classId, page, paymentStatus, requestKey, search, status, workshopId])
 
   useEffect(() => {
     if (!actionError) return
@@ -98,16 +119,22 @@ export function AdminEnrollmentsPage() {
   function updateFilters(values: {
     search?: string
     status?: EnrollmentStatus | null
+    paymentStatus?: PaymentStatus | null
     page?: number
   }) {
     const nextParams = new URLSearchParams()
     const nextSearch = values.search ?? search
     const nextStatus =
       values.status === undefined ? status : (values.status ?? undefined)
+    const nextPaymentStatus =
+      values.paymentStatus === undefined
+        ? paymentStatus
+        : (values.paymentStatus ?? undefined)
     const nextPage = values.page ?? 1
 
     if (nextSearch) nextParams.set('search', nextSearch)
     if (nextStatus) nextParams.set('status', nextStatus)
+    if (nextPaymentStatus) nextParams.set('paymentStatus', nextPaymentStatus)
     if (workshopId) nextParams.set('workshopId', workshopId)
     if (workshopTitle) nextParams.set('workshopTitle', workshopTitle)
     if (classId) nextParams.set('classId', classId)
@@ -119,7 +146,8 @@ export function AdminEnrollmentsPage() {
     const isPageNavigation =
       values.page !== undefined &&
       values.search === undefined &&
-      values.status === undefined
+      values.status === undefined &&
+      values.paymentStatus === undefined
 
     if (isPageNavigation) {
       setIsPaginating(true)
@@ -160,12 +188,21 @@ export function AdminEnrollmentsPage() {
     setUpdatingEnrollmentId(enrollment.id)
     setActionError(null)
     try {
-      await updateAdminEnrollmentStatus(enrollment.id, nextStatus)
+      const response = await updateAdminEnrollmentStatus(
+        enrollment.id,
+        nextStatus,
+      )
       setPendingStatusChange(null)
+      setEnrollments((currentEnrollments) =>
+        currentEnrollments.map((currentEnrollment) =>
+          currentEnrollment.id === enrollment.id
+            ? { ...currentEnrollment, ...response.data }
+            : currentEnrollment,
+        ),
+      )
       setFeedback(
         `Inscrição de ${enrollment.name} ${nextStatus === 'CONFIRMADA' ? 'confirmada' : 'cancelada'} com sucesso.`,
       )
-      setIsLoading(true)
       setRequestKey((key) => key + 1)
     } catch (requestError) {
       setPendingStatusChange(null)
@@ -179,7 +216,9 @@ export function AdminEnrollmentsPage() {
     }
   }
 
-  const hasFilters = Boolean(search || status || workshopId || classId)
+  const hasFilters = Boolean(
+    search || status || paymentStatus || workshopId || classId,
+  )
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -283,7 +322,7 @@ export function AdminEnrollmentsPage() {
       )}
 
       <form
-        className="mb-5 grid gap-3 border border-rule bg-paper p-4 sm:grid-cols-[1fr_13rem_auto]"
+        className="mb-5 grid gap-3 border border-rule bg-paper p-4 md:grid-cols-[minmax(12rem,1fr)_11rem_13rem_auto]"
         onSubmit={handleSearch}
       >
         <div>
@@ -326,6 +365,33 @@ export function AdminEnrollmentsPage() {
             <option value="PENDENTE">Pendentes</option>
             <option value="CONFIRMADA">Confirmadas</option>
             <option value="CANCELADA">Canceladas</option>
+          </select>
+        </div>
+        <div>
+          <label
+            className="mb-1.5 block font-mono text-xs tracking-wider text-muted uppercase"
+            htmlFor="payment-status"
+          >
+            Pagamento
+          </label>
+          <select
+            className="min-h-11 w-full rounded-sm border border-rule bg-light px-3 text-sm text-ink hover:border-muted"
+            id="payment-status"
+            value={paymentStatus ?? ''}
+            onChange={(event) =>
+              updateFilters({
+                paymentStatus: event.target.value
+                  ? (event.target.value as PaymentStatus)
+                  : null,
+                page: 1,
+              })
+            }
+          >
+            <option value="">Todos os pagamentos</option>
+            <option value="PENDENTE">Aguardando pagamento</option>
+            <option value="PAGO">Pagos</option>
+            <option value="ISENTO">Isentos</option>
+            <option value="CANCELADO">Cancelados</option>
           </select>
         </div>
         <Button className="self-end" type="submit">

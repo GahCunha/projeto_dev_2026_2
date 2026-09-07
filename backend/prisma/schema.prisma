@@ -19,6 +19,7 @@ enum PaymentStatus {
   ISENTO
   PENDENTE
   PAGO
+  CANCELADO
 
   @@map("StatusPagamento")
 }

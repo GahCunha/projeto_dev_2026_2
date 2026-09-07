@@ -84,9 +84,11 @@ describe('EnrollmentsTable', () => {
   })
 
   it('does not offer actions for a canceled enrollment', () => {
+    const canceledEnrollment = enrollment('CANCELADA')
+    canceledEnrollment.paymentStatus = 'CANCELADO'
     render(
       <EnrollmentsTable
-        enrollments={[enrollment('CANCELADA')]}
+        enrollments={[canceledEnrollment]}
         onStatusChange={vi.fn()}
       />,
     )
@@ -98,9 +100,10 @@ describe('EnrollmentsTable', () => {
       screen.queryByRole('button', { name: 'Cancelar' }),
     ).not.toBeInTheDocument()
     expect(screen.getAllByText('Nenhuma ação disponível')).not.toHaveLength(0)
+    expect(screen.getAllByText('Cancelado')).not.toHaveLength(0)
   })
 
-  it('shows the class and uses its first meeting as the next lesson', () => {
+  it('shows the class and when the enrollment was created', () => {
     const classEnrollment = enrollment('PENDENTE')
     classEnrollment.class = {
       id: 'class-id',
@@ -132,6 +135,7 @@ describe('EnrollmentsTable', () => {
     )
 
     expect(screen.getAllByText('Turma das quartas')).not.toHaveLength(0)
-    expect(screen.getAllByText(/03 de out\. de 2026/)).not.toHaveLength(0)
+    expect(screen.getAllByText(/01 de set\. de 2026/)).not.toHaveLength(0)
+    expect(screen.getAllByText('Inscrito em')).not.toHaveLength(0)
   })
 })

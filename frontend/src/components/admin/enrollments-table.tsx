@@ -71,10 +71,10 @@ export function EnrollmentsTable({
               </div>
               <div>
                 <dt className="font-mono text-xs tracking-wider text-muted uppercase">
-                  Próxima aula
+                  Inscrito em
                 </dt>
                 <dd className="mt-1 text-sm text-muted">
-                  {formatNextMeeting(enrollment)}
+                  {dateFormatter.format(new Date(enrollment.createdAt))}
                 </dd>
               </div>
             </dl>
@@ -95,7 +95,7 @@ export function EnrollmentsTable({
               <tr className="font-mono text-xs tracking-wider text-muted uppercase">
                 <th className="px-5 py-3 font-normal">Participante</th>
                 <th className="px-5 py-3 font-normal">Oficina</th>
-                <th className="px-5 py-3 font-normal">Próxima aula</th>
+                <th className="px-5 py-3 font-normal">Inscrito em</th>
                 <th className="px-5 py-3 font-normal">Status</th>
                 <th className="px-5 py-3 font-normal">Pagamento</th>
                 <th className="px-5 py-3 text-right font-normal">Ações</th>
@@ -127,7 +127,7 @@ export function EnrollmentsTable({
                     )}
                   </td>
                   <td className="px-5 py-4 align-middle text-sm whitespace-nowrap text-muted">
-                    {formatNextMeeting(enrollment)}
+                    {dateFormatter.format(new Date(enrollment.createdAt))}
                   </td>
                   <td className="px-5 py-4 align-middle">
                     <EnrollmentStatusBadge status={enrollment.status} />
@@ -151,18 +151,6 @@ export function EnrollmentsTable({
       </div>
     </>
   )
-}
-
-function formatNextMeeting(enrollment: AdminEnrollment) {
-  const nextMeeting = enrollment.class.meetings
-    .map((meeting) => meeting.startsAt)
-    .sort(
-      (first, second) => new Date(first).getTime() - new Date(second).getTime(),
-    )[0]
-
-  return nextMeeting
-    ? dateFormatter.format(new Date(nextMeeting))
-    : 'Nenhuma aula cadastrada'
 }
 
 function EnrollmentActions({
