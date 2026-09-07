@@ -23,6 +23,7 @@ const environmentSchema = z.object({
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
   SMTP_FROM: z.string().min(1).default("Feito à Mão <nao-responda@feitoamao.local>"),
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+  FRONTEND_DIST_PATH: z.string().min(1).optional(),
 });
 
 const result = environmentSchema.safeParse(process.env);
